@@ -1,0 +1,13 @@
+Usuarios (id, nombreUsuario, clave)
+Clave Primaria: id
+
+
+Amigos(id1,id2)
+Clave Primaria: id1,id2
+Clave Foranea: id1, Referencia: Usuarios(id)
+   Borrado: Cascada, Actualización: Cascada
+Clave Foranea: id2, Referencia: Usuarios(id)
+   Borrado: Cascada, Actualización: Cascada
+
+Solicitudes(id_solicitud, estado,id1,id2 fecha_solicitud)
+Clave Primaria: id_solicitud,id1,id2
