@@ -22,11 +22,11 @@ public class Servidor {
             // Inicia el registro RMI en el puerto dado
             startRegistry(puertoRMI);
             //Crea una instancia de npuntos_impl
-            npuntos_impl objeto_exportado = new npuntos_impl();
+            //npuntos_impl objeto_exportado = new npuntos_impl();
             // Guarda en el resgistro una referencia al objeto a tráves de una URL usando como puerto el dado y como máquina localhost
             // Para ello usa rebind, que sobreescribe en el registro RMI toda referencia asociada al nombre dado
             registryURL = "rmi://localhost:"+ puertoRMI +"/npuntos";
-            Naming.rebind(registryURL, objeto_exportado);
+            //Naming.rebind(registryURL, objeto_exportado);
             System.out.println("Servidor resgitrado\n");
             System.out.println("Servidor listo\n");
         }catch (Exception e){
