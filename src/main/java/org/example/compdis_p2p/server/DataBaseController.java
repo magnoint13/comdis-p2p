@@ -1,12 +1,18 @@
-package org.example.compdis_p2p;
+package org.example.compdis_p2p.server;
 
 
+import org.example.compdis_p2p.AuthException;
+import org.example.compdis_p2p.client.ClientInterface;
+
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-public class BaseDatosController {
+public class DataBaseController {
 
     private Connection con;
 
@@ -22,6 +28,21 @@ public class BaseDatosController {
             con = DriverManager.getConnection(url);
             System.out.println("Connection to SQLite has been established.");
 
+            // Leer el archivo SQL
+            String script = new String(Files.readAllBytes(Paths.get("BD.sql")));
+
+            // Dividir las sentencias en caso de múltiples queries
+            String[] sentencias = script.split(";");
+
+            Statement stmt = con.createStatement();
+
+            for (String sentencia : sentencias) {
+                if (!sentencia.trim().isEmpty()) {
+                    stmt.execute(sentencia);
+                    System.out.println("Ejecutado: " + sentencia);
+                }
+            }
+            /*
             // Crear las tablas si el archivo .db es nuevo
             String sqlUsuarios = "CREATE TABLE IF NOT EXISTS Usuarios (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -53,10 +74,13 @@ public class BaseDatosController {
             stmt.execute(sqlUsuarios);
             stmt.executeUpdate(sqlAmigos);
             stmt.executeUpdate(sqlSolicitudes);
+            */
             System.out.println("Tablas creadas correctamente.");
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -101,6 +125,18 @@ public class BaseDatosController {
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void checkUser(ClientInterface client) throws AuthException {
+        try{
+
+        } catch (Exception error) {
+            // En caso de error, simplemente mostrarlo por pantalla
+            System.err.printf("[ERROR] %s: %s\n", error.getClass().getName(), error.getMessage());
+            error.printStackTrace();
+            // Y salir con código no exitoso
+            System.exit(1);
         }
     }
 }
