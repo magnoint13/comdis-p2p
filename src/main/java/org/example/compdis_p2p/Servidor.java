@@ -2,11 +2,25 @@ package org.example.compdis_p2p;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 /**
  * Clase Servidor
  */
-public class Servidor {
+public class Servidor  extends UnicastRemoteObject implements ServidorInterface {
+
+    private final ArrayList<Client> clientes = new ArrayList<>();
+
+    public Servidor() throws RemoteException {
+        super();
+    }
+
+    @Override
+    void connect(Client client) throws NoOnlineException, RemoteException{
+
+    }
+
 
     /**
      * iniciar

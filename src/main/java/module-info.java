@@ -12,6 +12,7 @@ module org.example.compdis_p2p {
     requires com.almasb.fxgl.all;
     requires java.rmi;
     requires java.sql;
+    requires java.naming;
 
     opens org.example.compdis_p2p to javafx.fxml;
     exports org.example.compdis_p2p;
