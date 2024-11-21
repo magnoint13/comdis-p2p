@@ -16,4 +16,8 @@ module org.example.compdis_p2p {
 
     opens org.example.compdis_p2p to javafx.fxml;
     exports org.example.compdis_p2p;
+    exports org.example.compdis_p2p.server;
+    opens org.example.compdis_p2p.server to javafx.fxml;
+    exports org.example.compdis_p2p.client;
+    opens org.example.compdis_p2p.client to javafx.fxml;
 }
