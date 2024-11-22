@@ -1,34 +1,35 @@
-create table Usuarios(
-    id int auto_increment not null,
+create table if not exists Usuarios (
     nombreUsuario varchar(20) not null,
     clave varchar(60) not null,
-    primary key (id)
+    primary key (nombreUsuario)
 );
 
-create table Amigos(
-    id1 int not null,
-    id2 int not null,
-    primary key (id1,id2),
-    foreign key (id1) references Usuarios(id)
+create table if not exists Amigos (
+    nombreUsuario1 int not null,
+    nombreUsuario2 int not null,
+    primary key (nombreUsuario1,nombreUsuario2),
+    foreign key (nombreUsuario1) references Usuarios(nombreUsuario)
         on update cascade
         on delete cascade,
-    foreign key (id2) references Usuarios(id)
+    foreign key (nombreUsuario2) references Usuarios(nombreUsuario)
         on update cascade
-        on delete cascade
+        on delete cascade,
+    constraint check_usuarios_diferentes check (nombreUsuario1 != nombreUsuario2)
 );
 
-create table Solicitudes(
-    id_solicitud int auto_increment not null,
-    id1 int not null,
-    id2 int not null,
-    estado ENUM('pendiente', 'aceptada', 'rechazada') DEFAULT 'pendiente',
-    fecha_solitud date default current_date,
-    primary key (id_solicitud,id1,id2),
-    foreign key (id1) references Usuarios(id) 
-        ON delete cascade,
-        on update cascade
-    foreign key (id2) references Usuarios(id)
-        on update cascade
-        on delete cascade
-)
+-- TODO: esto daba error cerca de 'pendiente'
+--create table Solicitudes(
+    --id_solicitud int auto_increment not null,
+    --nombreUsuario1 int not null,
+    --nombreUsuario2 int not null,
+    --estado ENUM('pendiente', 'aceptada', 'rechazada') DEFAULT 'pendiente',
+    --fecha_solitud date default current_date,
+    --primary key (id_solicitud,nombreUsuario1,nombreUsuario2),
+    --foreign key (nombreUsuario1) references Usuarios(nombreUsuario)
+        --ON delete cascade,
+        --on update cascade
+    --foreign key (nombreUsuario2) references Usuarios(nombreUsuario)
+        --on update cascade
+        --on delete cascade
+--)
 
