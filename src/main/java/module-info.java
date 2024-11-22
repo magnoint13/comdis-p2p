@@ -11,8 +11,8 @@ module org.example.compdis_p2p {
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
     requires java.rmi;
-    requires java.sql;
-    requires java.naming;
+    requires com.fasterxml.jackson.databind;
+    requires org.xerial.sqlitejdbc;
 
     opens org.example.compdis_p2p to javafx.fxml;
     exports org.example.compdis_p2p;

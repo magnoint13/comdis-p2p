@@ -1,42 +1,42 @@
 package org.example.compdis_p2p.server;
 
+import org.example.compdis_p2p.PtpException;
+
 import java.rmi.Naming;
-import java.rmi.registry.Registry;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 public class MainServer {
+    private static final int REGISTRY_PORT = 1099;
+    public static final String REGISTRY_URL = "rmi://localhost:" + REGISTRY_PORT + "/server";
+    private static final String DATABASE_FILE = "P2P.db";
+    private static final String DATABASE_SCRIPT = "BD.sql";
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         try {
-            startRegistry(1099);
-            Server server = new Server();
-            String registryURL = "rmi://localhost:1099/server";
-            Naming.rebind(registryURL,server);
-            System.out.println("Servidor registrado");
-        }catch (Exception error){
+            startRegistry(REGISTRY_PORT);
+            Server server = new Server(DATABASE_FILE, DATABASE_SCRIPT);
+            Naming.rebind(REGISTRY_URL, server);
+        } catch (Exception error) {
             // En caso de error, simplemente mostrarlo por pantalla
-            System.err.printf("[ERROR] %s: %s\n", error.getClass().getName(), error.getMessage());
-            error.printStackTrace();
+            PtpException.logError(error);
+
             // Y salir con código no exitoso
             System.exit(1);
         }
     }
 
-    private static void startRegistry(int puerto) throws RemoteException{
+    private static void startRegistry(int port) throws RemoteException {
         try {
-            // Obtiene el registro RMI en el puerto indicado
-            Registry registro = LocateRegistry.getRegistry(puerto);
-            // Devuelve los objetos registrados en ese puerto
-            registro.list();
-        } catch (RemoteException e) { // Si no hay un registro en el puerto se lanza una excepción
-            System.out.println("No se ha podido encontrar un registro RMI en el puerto " + puerto+"\n");
-            // Entonces crea un registro RMI en el puerto
-            Registry registry = LocateRegistry.createRegistry(puerto);
-            System.out.println("Servidor iniciado en el puerto " + puerto+"\n");
+            // Tratamos de obtener el registro y listar su contenido.
+            // Si no está creado, esto lanza una excepción.
+            Registry registry = LocateRegistry.getRegistry(port);
+            registry.list();
+        } catch (RemoteException _) {
+            // Crear el registro en caso de que no exista.
+            LocateRegistry.createRegistry(port);
+            System.out.println("Registro de Java RMI creado");
         }
     }
-
-
-
 }

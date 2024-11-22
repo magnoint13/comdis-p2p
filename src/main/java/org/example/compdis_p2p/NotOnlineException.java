@@ -1,6 +1,7 @@
 package org.example.compdis_p2p;
 
-public class NotOnlineException extends Exception {
+// TODO: No se usa
+public class NotOnlineException extends PtpException {
     public NotOnlineException(String message) {
         super(message);
     }

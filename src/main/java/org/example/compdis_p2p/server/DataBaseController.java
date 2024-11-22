@@ -1,142 +1,201 @@
 package org.example.compdis_p2p.server;
 
-
+import org.example.compdis_p2p.AlreadyExistsException;
 import org.example.compdis_p2p.AuthException;
+import org.example.compdis_p2p.PtpException;
+import org.example.compdis_p2p.client.Client;
 import org.example.compdis_p2p.client.ClientInterface;
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.rmi.RemoteException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collection;
 
-public class DataBaseController {
+// TODO: https://www.sqlite.org/threadsafe.html
+// TODO: añadir amigo
+//       al insertar, hacerlo en orden para evitar que se repita
+//       Es decir, evitar tuplas ('marcos', 'pepe') y ('pepe', 'marcos')
+// TODO: eliminar amigo
+public class DataBaseController implements AutoCloseable {
+    private static final int TABLE_COUNT = 4;
 
-    private Connection con;
+    private final Connection connection;
 
+    public DataBaseController(String databaseFile, String creationScript) throws SQLException, IOException {
+        connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
+        System.out.println("Conexion con SQLite establecida");
 
-    public Connection getConnection() {
-        return con;
+        // Configuracion
+        createBD(creationScript);
+        enableForeignKeys();
     }
 
-    public void conectarBD(){
-        // URL base de datos
-        String url = "jdbc:sqlite:P2P.db";
-        try{
-            con = DriverManager.getConnection(url);
-            System.out.println("Connection to SQLite has been established.");
+    private void createBD(String creationScript) throws IOException {
+        try {
+            // Iniciar transaccion
+            connection.setAutoCommit(false);
 
-            // Leer el archivo SQL
-            String script = new String(Files.readAllBytes(Paths.get("BD.sql")));
-
-            // Dividir las sentencias en caso de múltiples queries
-            String[] sentencias = script.split(";");
-
-            Statement stmt = con.createStatement();
-
-            for (String sentencia : sentencias) {
-                if (!sentencia.trim().isEmpty()) {
-                    stmt.execute(sentencia);
-                    System.out.println("Ejecutado: " + sentencia);
+            // Realizar una consulta para obtener el número de tablas
+            try (Statement stmt = connection.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery("select count(*) as count from sqlite_schema;")) {
+                    if (rs.next() && rs.getInt("count") == TABLE_COUNT) {
+                        connection.commit();
+                        return;
+                    }
                 }
             }
-            /*
-            // Crear las tablas si el archivo .db es nuevo
-            String sqlUsuarios = "CREATE TABLE IF NOT EXISTS Usuarios (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "nombreUsuario TEXT NOT NULL," +
-                    "clave TEXT NOT NULL" +
-                    ");";
 
-            String sqlAmigos = "CREATE TABLE IF NOT EXISTS Amigos (" +
-                    "id1 INTEGER NOT NULL," +
-                    "id2 INTEGER NOT NULL," +
-                    "PRIMARY KEY (id1, id2)," +
-                    "FOREIGN KEY (id1) REFERENCES Usuarios(id) ON DELETE CASCADE," +
-                    "FOREIGN KEY (id2) REFERENCES Usuarios(id) ON DELETE CASCADE" +
-                    ");";
+            try (Statement stmt = connection.createStatement()) {
+                // Si el numero de tablas no es el adecuado, se ejecuta el script de creacion
+                String script = new String(Files.readAllBytes(Paths.get(creationScript)));
 
-            String sqlSolicitudes = "CREATE TABLE IF NOT EXISTS Solicitudes (" +
-                    "id_solicitud INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "id1 INTEGER NOT NULL," +
-                    "id2 INTEGER NOT NULL," +
-                    "estado TEXT DEFAULT 'pendiente'," +
-                    "fecha_solicitud DATE DEFAULT CURRENT_DATE," +
-                    "FOREIGN KEY (id1) REFERENCES Usuarios(id) ON DELETE CASCADE," +
-                    "FOREIGN KEY (id2) REFERENCES Usuarios(id) ON DELETE CASCADE" +
-                    ");";
+                // Dividir las sentencias en caso de múltiples queries
+                String[] sentencias = script.split(";");
 
+                for (String cmd : sentencias) {
+                    String cmdTrim = cmd.trim();
 
-            // Ejecutar las consultas para crear tablas
-            Statement stmt = con.createStatement();
-            stmt.execute(sqlUsuarios);
-            stmt.executeUpdate(sqlAmigos);
-            stmt.executeUpdate(sqlSolicitudes);
-            */
-            System.out.println("Tablas creadas correctamente.");
+                    if (!cmdTrim.isEmpty() && !cmdTrim.startsWith("--")) {
+                        stmt.addBatch(cmd);
+                        System.out.println("Ejecutado: " + cmd);
+                    }
+                }
 
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void insertarDatos(){
-        try {
-            String sql ="INSERT INTO Usuarios (nombreUsuario, clave) VALUES\n" +
-                    "('alice', 'clave123'),\n" +
-                    "('bob', 'clave456'),\n" +
-                    "('charlie', 'clave789'),\n" +
-                    "('david', 'clave000');\n" +
-                    "\n" +
-                    "INSERT INTO Solicitudes (id1, id2, estado, fecha_solicitud) VALUES\n" +
-                    "(1, 2, 'pendiente', '2024-11-20'),\n" +
-                    "(1, 3, 'pendiente', '2024-11-20'),\n" +
-                    "(2, 4, 'aceptada', '2024-11-18');\n" +
-                    "\n" +
-                    "INSERT INTO Amigos (id1, id2) VALUES\n" +
-                    "(1, 2),\n" +
-                    "(1, 3),\n" +
-                    "(2, 4);";
-            var stmt = con.createStatement();
-            stmt.execute(sql);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void pruebaConsulta(){
-        try {
-            String sql = "SELECT * FROM Usuarios";
-            var stmt = con.createStatement();
-            var rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                System.out.println(rs.getString("id") + " " + rs.getString("nombreUsuario") + " " + rs.getString("clave"));
+                // Ejecutar todas las sentencias de golpe
+                stmt.executeBatch();
+                connection.commit();
             }
 
-
-            sql = "SELECT * FROM Solicitudes";
-            rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                System.out.println(rs.getString("id1") + " " + rs.getString("id2") + " " + rs.getString("estado"));
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (SQLException error) {
+            rollback();
+            PtpException.logError(error);
+        } finally {
+            resetAutoCommit();
         }
     }
 
-    public void checkUser(ClientInterface client) throws AuthException {
-        try{
+    private void enableForeignKeys() throws SQLException {
+        // Por defecto SQLite 3 no comprueba las restricciones de clave foránea.
+        // Esto se puede cambiar, pero se debe ejecutar lo siguiente para cada conexion.
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate("pragma foreign_keys = on;");
+        }
+    }
 
-        } catch (Exception error) {
-            // En caso de error, simplemente mostrarlo por pantalla
-            System.err.printf("[ERROR] %s: %s\n", error.getClass().getName(), error.getMessage());
-            error.printStackTrace();
-            // Y salir con código no exitoso
-            System.exit(1);
+    public void checkUser(ClientInterface client) throws AuthException, RemoteException {
+        String smt = """
+                select count(*) as count
+                from usuarios
+                where nombreUsuario = ? and clave = ?;
+                """;
+
+        try (PreparedStatement pst = connection.prepareStatement(smt)) {
+            pst.setString(1, client.getUsername());
+            pst.setString(2, client.getPassword());
+
+            try (ResultSet rs = pst.executeQuery()) {
+                // Verifica que solo hay una coincidencia
+                if (!rs.next() || rs.getInt("count") != 1) {
+                    throw new AuthException("El usuario no existe la contraseña no es correcta");
+                }
+            }
+
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+    }
+
+    public Collection<ClientInterface> getFriends(ClientInterface client) throws RemoteException {
+        ArrayList<ClientInterface> friends = new ArrayList<>();
+        String smt = """
+                select nombreUsuario2 as friend
+                from Usuarios
+                     join Amigos on (nombreUsuario = nombreUsuario1)
+                where nombreUsuario = ?;
+                """;
+        try (PreparedStatement pst = connection.prepareStatement(smt)) {
+            pst.setString(1, client.getUsername());
+
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    ClientInterface friend = new Client(rs.getString("friend"), null);
+                    friends.add(friend);
+                }
+            }
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+
+        return friends;
+    }
+
+    public void addUser(ClientInterface client) throws RemoteException, AlreadyExistsException {
+        try (PreparedStatement pst = connection.prepareStatement("insert into Usuarios values (?, ?);")) {
+            pst.setString(1, client.getUsername());
+            pst.setString(2, client.getPassword());
+            pst.executeUpdate();
+
+        } catch (SQLException error) {
+            // https://www.sqlite.org/rescode.html#constraint_primarykey
+            if (error instanceof SQLiteException sqlError && sqlError.getResultCode().equals(SQLiteErrorCode.SQLITE_CONSTRAINT_PRIMARYKEY)) {
+                // TODO: al realizar el getter, se esta tramitando otra peticion a traves de la red que es innecesaria
+                throw new AlreadyExistsException("El usuario \"%s\" ya existe".formatted(client.getUsername()));
+            } else {
+                PtpException.logError(error);
+            }
+        }
+    }
+
+    public Collection<ClientInterface> searchClientsbyName(String name) throws RemoteException {
+        ArrayList<ClientInterface> result = new ArrayList<>();
+        String smt = """
+                select nombreUsuario as username, clase as password
+                from Usuarios
+                where nombreUsuario like ?
+                """;
+        try (PreparedStatement pst = connection.prepareStatement(smt)) {
+            pst.setString(1, "%" + name + "%");
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    ClientInterface friend = new Client(rs.getString("username"), rs.getString("password"));
+                    result.add(friend);
+                }
+            }
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+        return result;
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (!connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+    }
+
+    private void resetAutoCommit() {
+        try {
+            connection.setAutoCommit(true);
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+    }
+
+    private void rollback() {
+        try {
+            connection.rollback();
+        } catch (SQLException error) {
+            PtpException.logError(error);
         }
     }
 }

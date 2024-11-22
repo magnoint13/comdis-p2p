@@ -1,6 +1,6 @@
 package org.example.compdis_p2p.server;
 
-import org.example.compdis_p2p.NotOnlineException;
+import org.example.compdis_p2p.AlreadyExistsException;
 import org.example.compdis_p2p.AuthException;
 import org.example.compdis_p2p.client.ClientInterface;
 
@@ -8,14 +8,32 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
+// TODO: enviar solicitud de amistad
+// TODO: aceptar solicitud
+// TODO: rechazar solicitud
 public interface ServerInterface extends Remote {
 
-    Collection<ClientInterface> getConnectedClients() throws RemoteException;
+    /**
+     * Inscribir un nuevo usuario en la BD
+     */
+    void addUser(ClientInterface client) throws RemoteException, AlreadyExistsException;
 
+    /**
+     * Conectar el cliente. Comprobará sus credenciales.
+     */
     void connect(ClientInterface client) throws AuthException, RemoteException;
 
+    /**
+     * Desconectar el cliente
+     */
     void disconnect(ClientInterface client) throws RemoteException;
 
-    void registerClient(ClientInterface client) throws RemoteException;
+    // TODO: los siguientes metodos pueden ser peligrosos
+    // Obtener referencia y luego conectarme como él, sin necesidad de conocer la contraseña
+    ClientInterface getClient(String userName) throws RemoteException;
 
+    /**
+     * Buscar clientes por coincidencias de nombre, para agregar amigos
+     */
+    Collection<ClientInterface> searchClientsByName(String userName) throws RemoteException;
 }
