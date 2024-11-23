@@ -3,81 +3,53 @@ package org.example.compdis_p2p.client;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
+import org.example.compdis_p2p.PtpException;
 import org.example.compdis_p2p.server.MainServer;
 import org.example.compdis_p2p.server.ServerInterface;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.rmi.ConnectException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 
 public class ClientApp extends Application {
-    public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
+    private static final int WINDOW_WIDTH = 500;
+    private static final int WINDOW_HEIGHT = 500;
 
-
-        /*
-        ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
-
-        System.out.print("Nombre: ");
-        String name = System.console().readLine().trim();
-        System.out.print("Contraseña: ");
-        String password = System.console().readLine().trim();
-
-        Client client = new Client(name, password);
-
-        System.out.println("Crear nuevo? (s/N): ");
-        String crear = System.console().readLine().trim();
-        if (crear.charAt(0) == 's' || crear.charAt(0) == 'S') {
-            try {
-                server.addUser(client);
-                System.out.println("creado");
-            } catch (AlreadyExistsException error) {
-                System.out.println(error.getMessage());
-            }
-        }
-
-        try {
-            server.connect(client);
-            System.out.println("conectado");
-        } catch (AuthException error) {
-            System.out.println(error.getMessage());
-        }
-
-        System.out.print("Mensaje a: ");
-        String friend = System.console().readLine().trim();
-        System.out.print("Mensaje: ");
-        String msg = System.console().readLine().trim();
-
-        ClientInterface other = server.getClient(friend);
-        if (other != null) {
-            client.message(other, msg);
-            System.out.println("enviado");
-        } else {
-            System.out.println("ese usuario no esta online");
-        }
-
-        server.disconnect(client);
-        System.out.println("desconectado");
-        */
-
+    public static void main(String[] args) {
         launch();
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
-        ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
-        FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
-     //   URL fxmlLocation = ClientApp.class.getResource("Inicio.fxml");
-     //   System.out.println("FXML Location: " + fxmlLocation);
-        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
-        InicioController controller = fxmlLoader.getController();
-        controller.setServer(server);
-        controller.TxtAviso.setVisible(false);
-        stage.setTitle("Programa de comunicación P2P!");
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.show();
+    public void start(Stage stage) {
+        try {
+            // Iniciar la interfaz
+            FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
+            Scene scene = new Scene(fxmlLoader.load(), WINDOW_WIDTH, WINDOW_HEIGHT);
+            stage.setTitle("Programa de comunicación P2P!");
+            stage.setScene(scene);
+            stage.setResizable(false);
+            stage.show();
+
+            // Obtener una referencia al servidor para el controller
+            ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
+            InicioController controller = fxmlLoader.getController();
+            controller.setServer(server);
+            controller.TxtAviso.setVisible(false);
+
+        } catch (ConnectException error) {
+            new Alert(Alert.AlertType.ERROR, "No se pudo conectar al servidor").showAndWait();
+            System.exit(1);
+
+        } catch (Exception error) {
+            // Mostrar el error por pantalla
+            PtpException.logError(error);
+
+            // Mostrar al usuario un error "amigable"
+            new Alert(Alert.AlertType.ERROR, "Ha sucedido un error inesperado").showAndWait();
+
+            // Y salir con codigo no exitoso
+            System.exit(1);
+        }
     }
 }
