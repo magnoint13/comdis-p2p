@@ -9,10 +9,17 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
     private final String name;
     private final String password;
+    private Collection<ClientInterface> friendsOnline;
+    private Collection<String> usersPendingRequests;
 
     public Client(String name, String password) throws RemoteException {
         this.name = name;
         this.password = password;
+    }
+
+    @Override
+    public Collection<ClientInterface> getFriendsOnline() throws RemoteException {
+        return friendsOnline;
     }
 
     @Override
@@ -36,16 +43,30 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         for (ClientInterface friend : friendsOnline) {
             System.out.println('\t' + friend.getUsername());
         }
+        friendsOnline.clear();
+        this.friendsOnline = friendsOnline;
     }
 
     @Override
     public void notificationFriendConnected(ClientInterface other) throws RemoteException {
         System.out.println("El cliente " + other.getUsername() + " se ha conectado");
+        friendsOnline.add(other);
     }
 
     @Override
     public void notificationFriendDisconnected(ClientInterface other) throws RemoteException {
         System.out.println("El cliente " + other.getUsername() + " se ha desconectado");
+        friendsOnline.remove(other);
+    }
+
+    @Override
+    public void notifyPendingRequests(Collection<String> pendingRequests) throws RemoteException {
+        usersPendingRequests = pendingRequests;
+    }
+
+    @Override
+    public Collection<String> getPendingRequests() throws RemoteException {
+        return usersPendingRequests;
     }
 
     @Override

@@ -43,12 +43,16 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
         Collection<ClientInterface> friends = database.getFriends(newClient);
         Collection<ClientInterface> onlineFriends = intersection(connectedClients, friends);
 
+        System.out.printf("Amigos: %s\n", friends);
         for (ClientInterface f : onlineFriends) {
             f.notificationFriendConnected(newClient);
         }
 
         // Enviar al nuevo cliente quienes están conectados
         newClient.setFriendsOnline(onlineFriends);
+
+        //TODO: mostrar solicitudes pendientes
+        newClient.notifyPendingRequests(database.getPendingRequests(newClient));
 
         // Registrar al cliente como online
         // Debe ser lo último para que no se envien notificaciones repetidas
@@ -97,6 +101,11 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     @Override
     public Collection<ClientInterface> searchClientsByName(String name) throws RemoteException {
         return database.searchClientsbyName(name);
+    }
+
+    @Override
+    public void sendFriendRequest(ClientInterface client, String userName) throws RemoteException{
+        database.sendFriendRequest(client,userName);
     }
 
     private <T> Collection<T> intersection(Collection<T> list1, Collection<T> list2) {

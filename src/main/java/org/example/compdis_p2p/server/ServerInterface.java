@@ -36,4 +36,7 @@ public interface ServerInterface extends Remote {
      * Buscar clientes por coincidencias de nombre, para agregar amigos
      */
     Collection<ClientInterface> searchClientsByName(String userName) throws RemoteException;
+
+    void sendFriendRequest(ClientInterface client, String userName) throws RemoteException;
+
 }

@@ -17,19 +17,19 @@ create table if not exists Amigos (
     constraint check_usuarios_diferentes check (nombreUsuario1 != nombreUsuario2)
 );
 
--- TODO: esto daba error cerca de 'pendiente'
---create table Solicitudes(
-    --id_solicitud int auto_increment not null,
-    --nombreUsuario1 int not null,
-    --nombreUsuario2 int not null,
-    --estado ENUM('pendiente', 'aceptada', 'rechazada') DEFAULT 'pendiente',
+create table if not exists Solicitudes(
+    id_solicitud int auto_increment,
+    nombreUsuario1 int not null,
+    nombreUsuario2 int not null,
+    estado TEXT NOT NULL DEFAULT 'pendiente',
     --fecha_solitud date default current_date,
-    --primary key (id_solicitud,nombreUsuario1,nombreUsuario2),
-    --foreign key (nombreUsuario1) references Usuarios(nombreUsuario)
-        --ON delete cascade,
-        --on update cascade
-    --foreign key (nombreUsuario2) references Usuarios(nombreUsuario)
-        --on update cascade
-        --on delete cascade
---)
+    primary key (id_solicitud,nombreUsuario1,nombreUsuario2),
+    foreign key (nombreUsuario1) references Usuarios(nombreUsuario)
+        on delete cascade
+        on update cascade,
+    foreign key (nombreUsuario2) references Usuarios(nombreUsuario)
+        on update cascade
+        on delete cascade,
+    CONSTRAINT check_estado CHECK (estado IN ('pendiente', 'aceptada', 'rechazada'))
+);
 

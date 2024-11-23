@@ -22,7 +22,7 @@ import java.util.Collection;
 //       Es decir, evitar tuplas ('marcos', 'pepe') y ('pepe', 'marcos')
 // TODO: eliminar amigo
 public class DataBaseController implements AutoCloseable {
-    private static final int TABLE_COUNT = 4;
+    private static final int TABLE_COUNT = 5;
 
     private final Connection connection;
 
@@ -154,7 +154,7 @@ public class DataBaseController implements AutoCloseable {
     public Collection<ClientInterface> searchClientsbyName(String name) throws RemoteException {
         ArrayList<ClientInterface> result = new ArrayList<>();
         String smt = """
-                select nombreUsuario as username, clase as password
+                select nombreUsuario as username, clave as password
                 from Usuarios
                 where nombreUsuario like ?
                 """;
@@ -170,6 +170,41 @@ public class DataBaseController implements AutoCloseable {
             PtpException.logError(error);
         }
         return result;
+    }
+
+    public void sendFriendRequest(ClientInterface client, String userName) throws RemoteException {
+        //TODO: problemas con el auto increment, no se porque pone null al atributo
+        try (PreparedStatement pst = connection.prepareStatement("""
+                                                                insert into Solicitudes (nombreUsuario1, nombreUsuario2)
+                                                                VALUES (?,?);
+                                                                """)) {
+            pst.setString(1, client.getUsername()); //Emisor
+            pst.setString(2, userName);             //Receptor
+            pst.executeUpdate();
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+    }
+
+    public Collection<String> getPendingRequests(ClientInterface client) throws RemoteException {
+        ArrayList<String> requests = new ArrayList<>();
+        String smt = """
+                select nombreUsuario1 as other
+                from Solicitudes
+                where nombreUsuario2 = ? and estado = 'pendiente';
+                """;
+        try (PreparedStatement pst = connection.prepareStatement(smt)) {
+            pst.setString(1, client.getUsername());
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(rs.getString("other"));
+                }
+            }
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+
+        return requests;
     }
 
     @Override

@@ -30,4 +30,10 @@ public interface ClientInterface extends Remote {
     String getUsername() throws RemoteException;
 
     String getPassword() throws RemoteException;
+
+    void notifyPendingRequests(Collection<String> pendingRequests) throws RemoteException;
+
+    Collection<String> getPendingRequests() throws RemoteException;
+
+    Collection<ClientInterface> getFriendsOnline() throws RemoteException;
 }

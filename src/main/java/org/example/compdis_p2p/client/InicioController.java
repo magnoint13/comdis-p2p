@@ -2,6 +2,9 @@ package org.example.compdis_p2p.client;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -9,10 +12,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+import org.example.compdis_p2p.AlreadyExistsException;
 import org.example.compdis_p2p.AuthException;
 import org.example.compdis_p2p.server.ServerInterface;
 
 import javax.naming.AuthenticationException;
+import java.io.IOException;
+import java.net.URL;
 import java.rmi.RemoteException;
 
 
@@ -30,8 +37,6 @@ public class InicioController {
     public TextField TxtPassword;
     @FXML
     public Label TxtAviso;
-    @FXML
-    public Button BtnSignin;
 
     private ServerInterface server;
 
@@ -49,13 +54,14 @@ public class InicioController {
     }
 
     @FXML
-    public void Singin(ActionEvent actionEvent) throws RemoteException {
+    public void Singin(ActionEvent actionEvent) throws RemoteException,IOException {
         if (TxtUser.getText().isEmpty() || TxtPassword.getText().isEmpty()) {
             TxtAviso.setVisible(true);
         }else{
             Client client = new Client(TxtUser.getText(),TxtPassword.getText());
             try {
                 server.connect(client);
+                startMainWindow(client,server);
             } catch (AuthException e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error de autenticación");
@@ -64,5 +70,60 @@ public class InicioController {
                 alert.showAndWait();
             }
         }
+    }
+
+    @FXML
+    public void Register(ActionEvent actionEvent) throws RemoteException, IOException {
+        if (TxtUser.getText().isEmpty() || TxtPassword.getText().isEmpty()) {
+            TxtAviso.setVisible(true);
+        }else{
+            Client client = new Client(TxtUser.getText(),TxtPassword.getText());
+            try {
+                server.addUser(client);
+                server.connect(client);
+                startMainWindow(client,server);
+            } catch (AlreadyExistsException e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error al resgistrarse");
+                alert.setHeaderText("Usuario ya existente ");
+                alert.setContentText("Por favor escoga un nombre de usuario diferente");
+                alert.showAndWait();
+            }   catch (AuthException e) {
+                //No hace na
+            }
+
+        }
+    }
+
+    private void startMainWindow(ClientInterface client,ServerInterface server) throws RemoteException, IOException {
+        // Cargar el FXML para la nueva ventana
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/org/example/compdis_p2p/client/MainWindow.fxml"));
+        Parent root = fxmlLoader.load();
+
+        // Crear una nueva escena con el FXML cargado
+        Scene scene = new Scene(root, 600, 400);
+
+        MainWindowControlller controller = fxmlLoader.getController();
+
+        controller.setClient(client);
+        controller.setServer(server);
+        controller.iniciar();
+
+        // Obtener el stage actual y cambiar la escena
+        Stage stage = (Stage) TxtUser.getScene().getWindow();
+        stage.setScene(scene);
+        stage.setResizable(false);
+
+        stage.setOnCloseRequest(event -> {
+            // Consumir el evento para evitar que se cierre inmediatamente
+            event.consume();
+            try {
+                server.disconnect(client);
+                System.exit(0);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        stage.show();
     }
 }
