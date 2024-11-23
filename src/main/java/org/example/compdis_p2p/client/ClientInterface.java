@@ -18,6 +18,11 @@ public interface ClientInterface extends Remote {
     void notificationFriendConnected(ClientInterface friend) throws RemoteException;
 
     /**
+     * Se notifica a `this` que `friend` se acaba de desconectar
+     */
+    void notificationFriendDisconnected(ClientInterface friend) throws RemoteException;
+
+    /**
      * Cuando un cliente se conecta, recibe quienes de sus amigos están conectados
      */
     void setFriendsOnline(Collection<ClientInterface> friendsOnline) throws RemoteException;

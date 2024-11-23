@@ -44,6 +44,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     }
 
     @Override
+    public void notificationFriendDisconnected(ClientInterface other) throws RemoteException {
+        System.out.println("El cliente " + other.getUsername() + " se ha desconectado");
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

@@ -64,9 +64,18 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
         // Quitar de la lista de usuarios online
         connectedClients.remove(client);
-        System.out.printf("Cliente desconectado: %s\n", client.getUsername());
 
-        // TODO: notificar de que se ha desconectado
+        // TODO: notificar de que se ha desconectado //LISTO,CREO
+
+        // Notificar a sus amigos de que se ha desconectado
+        Collection<ClientInterface> friends = database.getFriends(client);
+        Collection<ClientInterface> onlineFriends = intersection(connectedClients, friends);
+
+        for (ClientInterface f : onlineFriends) {
+            f.notificationFriendDisconnected(client);
+        }
+
+        System.out.printf("Cliente desconectado: %s\n", client.getUsername());
     }
 
     @Override
@@ -92,13 +101,11 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     private <T> Collection<T> intersection(Collection<T> list1, Collection<T> list2) {
         Collection<T> list = new ArrayList<T>();
-
         for (T t : list1) {
             if(list2.contains(t)) {
                 list.add(t);
             }
         }
-
         return list;
     }
 }

@@ -13,6 +13,7 @@ module org.example.compdis_p2p {
     requires java.rmi;
     requires com.fasterxml.jackson.databind;
     requires org.xerial.sqlitejdbc;
+    requires java.desktop;
 
     opens org.example.compdis_p2p to javafx.fxml;
     exports org.example.compdis_p2p;

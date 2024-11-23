@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<SplitPane dividerPositions="0.29797979797979796" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-border-color: white;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.compdis_p2p.client.InicioController">
+  <items>
+    <AnchorPane fx:id="Leftpanel" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" style="-fx-background-color: limegreen;">
+         <children>
+            <Label layoutX="23.0" layoutY="114.0" text="Whatsapp 3.0" textAlignment="CENTER" textFill="WHITE" textOverrun="CLIP">
+               <font>
+                  <Font name="System Bold" size="20.0" />
+               </font>
+            </Label>
+         </children></AnchorPane>
+    <!-- Añadir la imagen al AnchorPane izquierdo -->
+    <AnchorPane fx:id="Rightpanel" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" style="-fx-background-color: white;">
+         <children>
+            <Label layoutX="45.0" layoutY="87.0" prefHeight="40.0" prefWidth="174.0" text="!Bienvenido!" textFill="#21df31">
+               <font>
+                  <Font size="28.0" />
+               </font>
+            </Label>
+            <Button fx:id="BtnSignin" layoutX="278.0" layoutY="338.0" mnemonicParsing="false" onAction="#Singin" style="-fx-background-color: limegreen;" text="Iniciar Sesion" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font></Button>
+            <TextField fx:id="TxtUser" layoutX="46.0" layoutY="186.0" style="-fx-border-color: limegreen;" />
+            <TextField fx:id="TxtPassword" layoutX="46.0" layoutY="258.0" style="-fx-border-color: limegreen;" />
+            <Label layoutX="45.0" layoutY="154.0" text="Usuario" textFill="#21df31">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
+            <Label layoutX="45.0" layoutY="225.0" text="Contraseña" textFill="#21df31">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
+            <Label fx:id="TxtAviso" layoutX="46.0" layoutY="294.0" text="Indique tanto usuario como una contraseña" textAlignment="CENTER" textFill="#ff0404">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Label>
+         </children></AnchorPane>
+  </items>
+</SplitPane>

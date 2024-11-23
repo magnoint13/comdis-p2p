@@ -4,18 +4,20 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.example.compdis_p2p.AlreadyExistsException;
-import org.example.compdis_p2p.AuthException;
 import org.example.compdis_p2p.server.MainServer;
 import org.example.compdis_p2p.server.ServerInterface;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 public class ClientApp extends Application {
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
+
+
+        /*
         ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
 
         System.out.print("Nombre: ");
@@ -58,14 +60,21 @@ public class ClientApp extends Application {
 
         server.disconnect(client);
         System.out.println("desconectado");
+        */
 
-        //launch();
+        launch();
     }
 
     @Override
     public void start(Stage stage) throws Exception {
+        ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
         FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+     //   URL fxmlLocation = ClientApp.class.getResource("Inicio.fxml");
+     //   System.out.println("FXML Location: " + fxmlLocation);
+        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+        InicioController controller = fxmlLoader.getController();
+        controller.setServer(server);
+        controller.TxtAviso.setVisible(false);
         stage.setTitle("Programa de comunicación P2P!");
         stage.setScene(scene);
         stage.setResizable(false);
