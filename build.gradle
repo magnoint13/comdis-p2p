@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+sourceSets {
+    main.java.srcDirs = ['src']
+    main.resources.srcDirs = ['resources']
+    test.java.srcDirs = ['tests']
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(23)
+compileJava.options.compilerArgs << "-Xlint:all"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+
+    // Evitar el error de que no se ha encontrado clase
+    implementation 'org.slf4j:slf4j-api:1.7.5'     // API de logging unificada
+    implementation 'org.slf4j:slf4j-simple:1.7.5'  // El logger como tal
+}
+
+javafx {
+    version = "23.0.1"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+tasks.register('runClient', JavaExec) {
+    group = 'Execution'
+    description = 'Run Client program'
+    dependsOn 'classes'
+    standardInput = System.in
+    mainClass = 'comdis.client.ClientApp'
+    classpath = sourceSets.main.runtimeClasspath
+    // Necesario para JavaFX
+    jvmArgs = [
+            '--module-path', classpath.asPath,
+            '--add-modules', javafx.modules.join(',')
+    ]
+}
+
+tasks.register('runServer', JavaExec) {
+    group = 'Execution'
+    description = 'Run Server program'
+    dependsOn 'classes'
+    mainClass = 'comdis.server.MainServer'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+}
+

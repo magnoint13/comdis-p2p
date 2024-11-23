@@ -1,0 +1,39 @@
+package comdis.server;
+
+import comdis.AlreadyExistsException;
+import comdis.AuthException;
+import comdis.client.ClientInterface;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.Collection;
+
+// TODO: enviar solicitud de amistad
+// TODO: aceptar solicitud
+// TODO: rechazar solicitud
+public interface ServerInterface extends Remote {
+
+    /**
+     * Inscribir un nuevo usuario en la BD
+     */
+    void addUser(ClientInterface client) throws RemoteException, AlreadyExistsException;
+
+    /**
+     * Conectar el cliente. Comprobará sus credenciales.
+     */
+    void connect(ClientInterface client) throws AuthException, RemoteException;
+
+    /**
+     * Desconectar el cliente
+     */
+    void disconnect(ClientInterface client) throws RemoteException;
+
+    // TODO: los siguientes metodos pueden ser peligrosos
+    // Obtener referencia y luego conectarme como él, sin necesidad de conocer la contraseña
+    ClientInterface getClient(String userName) throws RemoteException;
+
+    /**
+     * Buscar clientes por coincidencias de nombre, para agregar amigos
+     */
+    Collection<ClientInterface> searchClientsByName(String userName) throws RemoteException;
+}
