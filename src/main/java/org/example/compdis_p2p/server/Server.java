@@ -69,8 +69,6 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
         // Quitar de la lista de usuarios online
         connectedClients.remove(client);
 
-        // TODO: notificar de que se ha desconectado //LISTO,CREO
-
         // Notificar a sus amigos de que se ha desconectado
         Collection<ClientInterface> friends = database.getFriends(client);
         Collection<ClientInterface> onlineFriends = intersection(connectedClients, friends);

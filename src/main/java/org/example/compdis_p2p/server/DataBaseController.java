@@ -22,7 +22,7 @@ import java.util.Collection;
 //       Es decir, evitar tuplas ('marcos', 'pepe') y ('pepe', 'marcos')
 // TODO: eliminar amigo
 public class DataBaseController implements AutoCloseable {
-    private static final int TABLE_COUNT = 5;
+    private static final int TABLE_COUNT = 3;
 
     private final Connection connection;
 
@@ -42,7 +42,12 @@ public class DataBaseController implements AutoCloseable {
 
             // Realizar una consulta para obtener el número de tablas
             try (Statement stmt = connection.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery("select count(*) as count from sqlite_schema;")) {
+                String query = """
+                        select count(*) as count
+                        from sqlite_schema
+                        where type = 'table'
+                        """;
+                try (ResultSet rs = stmt.executeQuery(query)) {
                     if (rs.next() && rs.getInt("count") == TABLE_COUNT) {
                         connection.commit();
                         return;
@@ -61,8 +66,8 @@ public class DataBaseController implements AutoCloseable {
                     String cmdTrim = cmd.trim();
 
                     if (!cmdTrim.isEmpty() && !cmdTrim.startsWith("--")) {
-                        stmt.addBatch(cmd);
-                        System.out.println("Ejecutado: " + cmd);
+                        stmt.addBatch(cmdTrim);
+                        System.out.println("==== Ejecutar ====" + cmdTrim);
                     }
                 }
 
@@ -101,7 +106,7 @@ public class DataBaseController implements AutoCloseable {
             try (ResultSet rs = pst.executeQuery()) {
                 // Verifica que solo hay una coincidencia
                 if (!rs.next() || rs.getInt("count") != 1) {
-                    throw new AuthException("El usuario no existe la contraseña no es correcta");
+                    throw new AuthException("El usuario no existe o la contraseña no es correcta");
                 }
             }
 
