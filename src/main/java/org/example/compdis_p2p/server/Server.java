@@ -3,6 +3,7 @@ package org.example.compdis_p2p.server;
 import org.example.compdis_p2p.AlreadyExistsException;
 import org.example.compdis_p2p.AuthException;
 import org.example.compdis_p2p.client.ClientInterface;
+import org.example.compdis_p2p.client.ClientPtp;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -51,7 +52,6 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
         // Enviar al nuevo cliente quienes están conectados
         newClient.setFriendsOnline(onlineFriends);
 
-        //TODO: mostrar solicitudes pendientes
         newClient.notifyPendingRequests(database.getPendingRequests(newClient));
 
         // Registrar al cliente como online
@@ -86,10 +86,10 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     }
 
     @Override
-    public ClientInterface getClient(String name) throws RemoteException {
+    public ClientPtp getClient(String name) throws RemoteException {
         for (ClientInterface c : connectedClients) {
             if (c.getUsername().equals(name)) {
-                return c;
+                return (ClientPtp) c;
             }
         }
 
@@ -97,13 +97,29 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     }
 
     @Override
-    public Collection<ClientInterface> searchClientsByName(String name) throws RemoteException {
+    public Collection<ClientPtp> searchClientsByName(String name) throws RemoteException {
         return database.searchClientsbyName(name);
     }
 
     @Override
     public void sendFriendRequest(ClientInterface client, String userName) throws RemoteException{
         database.sendFriendRequest(client,userName);
+        client.notifyPendingRequests(database.getPendingRequests(client));
+    }
+
+    @Override
+    public void createFriendship(ClientInterface client, String other) throws RemoteException{
+        database.createFriendship(client,other);
+    }
+
+    @Override
+    public boolean alreadyFriendRequest(ClientInterface client, String other) throws RemoteException{
+        return database.alreadyFriendRequestSended(client,other);
+    }
+
+    @Override
+    public boolean pendingRequestExisting(ClientInterface client, String other) throws RemoteException {
+        return false;
     }
 
     private <T> Collection<T> intersection(Collection<T> list1, Collection<T> list2) {

@@ -13,8 +13,8 @@ import java.rmi.ConnectException;
 import java.rmi.Naming;
 
 public class ClientApp extends Application {
-    private static final int WINDOW_WIDTH = 500;
-    private static final int WINDOW_HEIGHT = 500;
+    private static final int WINDOW_WIDTH = 600;
+    private static final int WINDOW_HEIGHT = 400;
 
     public static void main(String[] args) {
         launch();
@@ -29,13 +29,25 @@ public class ClientApp extends Application {
             stage.setTitle("Programa de comunicación P2P!");
             stage.setScene(scene);
             stage.setResizable(false);
-            stage.show();
 
             // Obtener una referencia al servidor para el controller
             ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
             InicioController controller = fxmlLoader.getController();
             controller.setServer(server);
             controller.TxtAviso.setVisible(false);
+
+            // Configurar el cierre de ventana
+            stage.setOnCloseRequest(event -> {
+                // Consumir el evento para evitar que se cierre inmediatamente
+                event.consume();
+                try {
+                    System.exit(0);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            stage.show();
 
         } catch (ConnectException error) {
             new Alert(Alert.AlertType.ERROR, "No se pudo conectar al servidor").showAndWait();

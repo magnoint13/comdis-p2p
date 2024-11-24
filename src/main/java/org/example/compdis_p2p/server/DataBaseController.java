@@ -5,6 +5,7 @@ import org.example.compdis_p2p.AuthException;
 import org.example.compdis_p2p.PtpException;
 import org.example.compdis_p2p.client.Client;
 import org.example.compdis_p2p.client.ClientInterface;
+import org.example.compdis_p2p.client.ClientPtp;
 import org.sqlite.SQLiteErrorCode;
 import org.sqlite.SQLiteException;
 
@@ -156,8 +157,8 @@ public class DataBaseController implements AutoCloseable {
         }
     }
 
-    public Collection<ClientInterface> searchClientsbyName(String name) throws RemoteException {
-        ArrayList<ClientInterface> result = new ArrayList<>();
+    public Collection<ClientPtp> searchClientsbyName(String name) throws RemoteException {
+        ArrayList<ClientPtp> result = new ArrayList<>();
         String smt = """
                 select nombreUsuario as username, clave as password
                 from Usuarios
@@ -167,7 +168,7 @@ public class DataBaseController implements AutoCloseable {
             pst.setString(1, "%" + name + "%");
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
-                    ClientInterface friend = new Client(rs.getString("username"), rs.getString("password"));
+                    ClientPtp friend = new Client(rs.getString("username"), rs.getString("password"));
                     result.add(friend);
                 }
             }
@@ -177,15 +178,53 @@ public class DataBaseController implements AutoCloseable {
         return result;
     }
 
+    public boolean alreadyFriendRequestSended(ClientInterface client, String userName) throws RemoteException {
+        try (PreparedStatement pst = connection.prepareStatement("""
+                                                                    select *
+                                                                    from Solicitudes
+                                                                    where nombreUsuario1 = ? and nombreUsuario2 = ? and estado = 'pendiente'; 
+                                                                    """)){
+            pst.setString(1, client.getUsername());
+            pst.setString(2, userName);
+            try (ResultSet rs = pst.executeQuery()){
+                if (rs.next()) {
+                    return true;
+                }
+            }
+        }catch (SQLException error) {
+            PtpException.logError(error);
+        }
+        return false;
+    }
+
+    public boolean pendingRequestExisting(ClientInterface client, String userName) throws RemoteException {
+        try (PreparedStatement pst = connection.prepareStatement("""
+                                                                    select *
+                                                                    from Solicitudes
+                                                                    where nombreUsuario1 = ? and nombreUsuario2 = ? and estado = 'pendiente'; 
+                                                                    """)){
+            pst.setString(1, userName);
+            pst.setString(2, client.getUsername());
+            try (ResultSet rs = pst.executeQuery()){
+                if (rs.next()) {
+                    return true;
+                }
+            }
+        }catch (SQLException error) {
+            PtpException.logError(error);
+        }
+        return false;
+    }
+
     public void sendFriendRequest(ClientInterface client, String userName) throws RemoteException {
         //TODO: problemas con el auto increment, no se porque pone null al atributo
-        try (PreparedStatement pst = connection.prepareStatement("""
+            try (PreparedStatement pst2 = connection.prepareStatement("""
                                                                 insert into Solicitudes (nombreUsuario1, nombreUsuario2)
                                                                 VALUES (?,?);
                                                                 """)) {
-            pst.setString(1, client.getUsername()); //Emisor
-            pst.setString(2, userName);             //Receptor
-            pst.executeUpdate();
+                pst2.setString(1, client.getUsername()); //Emisor
+                pst2.setString(2, userName);             //Receptor
+                pst2.executeUpdate();
         } catch (SQLException error) {
             PtpException.logError(error);
         }
@@ -210,6 +249,28 @@ public class DataBaseController implements AutoCloseable {
         }
 
         return requests;
+    }
+
+    public void createFriendship(ClientInterface client, String other) throws RemoteException {
+        try (PreparedStatement pst = connection.prepareStatement("""
+                                                                insert into Amigos (nombreUsuario1, nombreUsuario2)
+                                                                VALUES (?,?);
+                                                                """)) {
+            pst.setString(1, client.getUsername()); //Receptor
+            pst.setString(2, other);                //Emisor, es decir, al reves que al insertar
+            pst.executeUpdate();
+            try (PreparedStatement pst2 = connection.prepareStatement("""
+                                                                     update Solicitudes
+                                                                     set estado = 'aceptada'
+                                                                     where nombreUsuario1 = ? and nombreUsuario2 = ?;
+                                                                     """)){
+                pst2.setString(1, other);
+                pst2.setString(2, client.getUsername());
+                pst2.executeUpdate();
+            }
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
     }
 
     @Override
@@ -238,4 +299,6 @@ public class DataBaseController implements AutoCloseable {
             PtpException.logError(error);
         }
     }
+
+
 }

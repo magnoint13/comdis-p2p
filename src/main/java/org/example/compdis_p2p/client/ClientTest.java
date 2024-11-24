@@ -45,9 +45,9 @@ public class ClientTest {
         System.out.print("Mensaje: ");
         String msg = System.console().readLine().trim();
 
-        ClientInterface other = server.getClient(friend);
+        ClientInterface other = (ClientInterface) server.getClient(friend); //HICE los casts asi cutre pa que no de error (solo estos)
         if (other != null) {
-            client.message(other, msg);
+            client.message((ClientPtp) other, msg);
             System.out.println("enviado");
         } else {
             System.out.println("ese usuario no esta online");

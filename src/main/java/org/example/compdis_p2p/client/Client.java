@@ -2,23 +2,25 @@ package org.example.compdis_p2p.client;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Collection;
 
 // TODO: unexportObject para que la JVM pueda terminar
-public class Client extends UnicastRemoteObject implements ClientInterface {
+public class Client extends UnicastRemoteObject implements ClientInterface, ClientPtp{
 
     private final String name;
     private final String password;
-    private Collection<ClientInterface> friendsOnline;
+    private Collection<ClientPtp> friendsOnline;
     private Collection<String> usersPendingRequests;
 
     public Client(String name, String password) throws RemoteException {
         this.name = name;
         this.password = password;
+        this.friendsOnline = new ArrayList<ClientPtp>();
     }
 
     @Override
-    public Collection<ClientInterface> getFriendsOnline() throws RemoteException {
+    public Collection<ClientPtp> getFriendsOnline() throws RemoteException {
         return friendsOnline;
     }
 
@@ -33,30 +35,30 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     }
 
     @Override
-    public void message(ClientInterface client, String message) throws RemoteException {
-        System.out.println(client.getUsername() + " le ha enviado el siguiente mensaje: " + message);
+    public void message (ClientPtp sender, String message) throws RemoteException {
+        System.out.println(sender.getUsername() + " le ha enviado el siguiente mensaje: " + message);
     }
 
     @Override
     public void setFriendsOnline(Collection<ClientInterface> friendsOnline) throws RemoteException {
+        this.friendsOnline.clear();
         System.out.println("Amigos online:");
         for (ClientInterface friend : friendsOnline) {
             System.out.println('\t' + friend.getUsername());
+            this.friendsOnline.add((ClientPtp) friend);
         }
-        friendsOnline.clear();
-        this.friendsOnline = friendsOnline;
     }
 
     @Override
     public void notificationFriendConnected(ClientInterface other) throws RemoteException {
         System.out.println("El cliente " + other.getUsername() + " se ha conectado");
-        friendsOnline.add(other);
+        friendsOnline.add((ClientPtp) other);
     }
 
     @Override
     public void notificationFriendDisconnected(ClientInterface other) throws RemoteException {
         System.out.println("El cliente " + other.getUsername() + " se ha desconectado");
-        friendsOnline.remove(other);
+        friendsOnline.remove((ClientPtp) other);
     }
 
     @Override

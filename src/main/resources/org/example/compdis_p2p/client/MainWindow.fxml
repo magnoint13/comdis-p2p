@@ -82,7 +82,7 @@
                </ScrollPane>
                <TextField fx:id="TxtSearchUsers" layoutX="-2.0" layoutY="-2.0" prefHeight="34.0" prefWidth="440.0" promptText="Buscar usuarios" />
                <Button fx:id="BtnSearchUsers" layoutX="517.0" layoutY="-4.0" mnemonicParsing="false" onAction="#searchUsers" prefHeight="36.0" prefWidth="83.0" text="Buscar" />
-               <Button fx:id="BtnAddFriend" layoutX="438.0" layoutY="-4.0" mnemonicParsing="false" onAction="#addFriend" prefHeight="36.0" prefWidth="83.0" text="Agregar" />
+               <Button fx:id="BtnAddFriend" layoutX="438.0" layoutY="-4.0" mnemonicParsing="false" onAction="#sendFriendRequest" prefHeight="36.0" prefWidth="83.0" text="Agregar" />
                 </AnchorPane>
             </content>
         </Tab>
@@ -93,12 +93,12 @@
                         <content>
                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="369.0" prefWidth="600.0">
                                 <children>
-                                    <ListView fx:id="yes" onMouseClicked="#printsSelectedUser" prefHeight="371.0" prefWidth="587.0" />
+                                    <ListView fx:id="PendingRequests" onMouseClicked="#printRequestSelected" prefHeight="371.0" prefWidth="587.0" />
                                 </children>
                             </AnchorPane>
                         </content>
                     </ScrollPane>
-               <Button fx:id="BtnAccept" layoutX="508.0" layoutY="-2.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="91.0" text="Aceptar" onAction="#acceptFriendRequest"/>
+               <Button fx:id="BtnAccept" layoutX="508.0" layoutY="-2.0" mnemonicParsing="false" onAction="#acceptFriendRequest" prefHeight="31.0" prefWidth="91.0" text="Aceptar" />
                 </AnchorPane>
             </content>
         </Tab>
