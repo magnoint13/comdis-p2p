@@ -101,32 +101,91 @@ No pasa nada por no contemplar la suplantación en el envío de mensajes
 
 # Diseño de las interfaces
 
+> [!important]
+> Faltan las `RemoteException` en todas partes
+
+> [!important]
+> No usar _setters_/_getters_/_send_/_receive_ porque desde un lado se envía un
+> dato y desde el otro se recibe. Es decir, si un método se llama `sendMsg` solo
+> tiene sentido desde el cliente emisor (para él sí es _send_) pero no en el
+> receptor (para él es _receive_).
+
+Peticiones que se tramitan en al servidor:
+
 ```java
-class ServerInterface extends Remote {
+public enum FriendRequestStatus {
+    PENDING("Pendiente"),
+    ACCEPTED("Aceptada"),
+    REJECTED("Rechazada");
 
-  ArrayList<Client> getFriends(Client client) throws NotOnlineException;
-
-  // suscribirse al evento conectar
-  void connect(Client client) throws AuthenticationException;
-  // dessuscribirse
-  void disconnect(Client client);
-
-  ArrayList<Client> getClientsByName(String userId); // Buscador
-  Client getClientById(String userId);
-
-  void acceptFriendRequest(Client client);
-
+    // TODO: probar como va esto
+    // https://www.baeldung.com/java-enum-values
+    public final String status;
+    private FriendRequestStatus(String status) {
+        this.status = status;
+    }
 }
 
-class ClientInterface extends Remote {
-  void sendFriendRequest(Client client) throws AlreadyFriendsException;
-  void sendMsg(Client receiver, Message msg) throws NotOnlineException;
+public interface ServerInterface extends Remote {
+    void connect(ClientCallback client) throws AuthException, RemoteException;
+    void disconnect(ClientCallback client);
 
-  void notifyClientConnected(Client newClient);
+    void createUser(ClientCallback client) throws AlreadyExistsException;
+    // TODO: borrar usuario?
+
+
+    void sendFriendRequest(ClientCallback from, String to) throws UserNotFoundException;
+    void updateFriendRequest(ClientCallback from, String to, FriendRequestStatus status) throws UserNotFoundException;
+    // si es ACCEPTED, el server le notifica con friendConnected para que pueda hablar con él
+    // si es REJECTED, se borra la request de la BD (se podría dejar para tener un histórico)
+    // si es PENDING, se ignora (no se debería hacer la request)
+    // TODO: borrar amigo?
 }
+```
 
-class Message {
-  String getBody();
-  Date getDate();
+Callback que el cliente manda al servidor para recibir informacion:
+
+> [!important]
+> Dentro de estos métodos se deben gesionar todas las excepciones que puedan
+> ocurrir para no tumbar al servidor.
+
+```java
+public interface ClientCallback extends Remote {
+    String getUsername();
+    String getPassword();
+
+    // TODO: optimizar esto, evitar 2 peticiones para autenticar
+    // Propuesta:
+    String getCredentials(); // devuelve "username:password"
+    // Otra: ServerInterface.connect acepta el Callback, username y password
+
+    // Notificaciones de quien se conecta
+    void friendsOnline(Collection<ClientPtp> friends);  // Amigos ya online
+    void friendConnected(ClientPtp friend);  // Notificación nuevo amigo online
+    void friendDisconnected(ClientPtp friend); // Notificación amigo de desconecta
+
+    // Notificaciones de amistad
+    // No mandar ClientPtp porque aun no son amigos
+    void friendRequests(Collection<String> requests); // peticiones pendientes al conectarse
+    void newFriendRequest(String request); // notificación nueva mientras `this` está online
+}
+```
+
+Interfaz para que los clientes interactúen entre sí:
+
+```java
+public interface ClientPtp extends Remote {
+    // `this` recibe el mensaje `msg` del cliente `sender`
+    void message(ClientPtp sender, String msg);
+
+    // TODO: si se puede borrar este método, mejor:
+    // Por ejemplo:
+    //    Cliente A y B son amigos y ambos online
+    //    B se desconecta
+    //    El server notifica a A de que B se desconectó
+    //    A quiere mostrar en la GUI que B se desconectó
+    //    Como recibe por argumentos ClientePtp, hace B.getUsername()
+    //    Pero B está desconectado, no puede responder
+    void getUsername();
 }
 ```
