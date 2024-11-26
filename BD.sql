@@ -21,7 +21,7 @@ create table if not exists Solicitudes (
     --fechaSolicitud timestamp not null default current_timestamp,
     emisor text not null,
     receptor text not null,
-    estado text not null default 'Pendiente',
+    estado text not null default 'pendiente',
     primary key (emisor, receptor),
     --primary key (fechaSolicitud, emisor, receptor),
     foreign key (emisor) references Usuarios(nombreUsuario)
@@ -31,6 +31,6 @@ create table if not exists Solicitudes (
         on update cascade
         on delete cascade,
     -- Asegurarse que son los mismos estados que en server.FriendStatus
-    constraint check_estado check (estado in ('Pendiente', 'Aceptada', 'Rechazada'))
+    constraint check_estado check (estado in ('pendiente', 'aceptada', 'rechazada')),
     constraint check_usuarios_diferentes check (emisor != receptor)
 );

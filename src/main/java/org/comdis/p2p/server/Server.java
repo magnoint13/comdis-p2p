@@ -133,8 +133,8 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     // ==== BUSCAR USUARIOS ============================================================================================
 
     @Override
-    public Collection<String> searchUsernames(String username) throws RemoteException {
-        return database.searchUsernames(username);
+    public Collection<String> searchUsernames(RemoteClient searcher, String username) throws RemoteException {
+        return database.searchUsernames(username, searcher.getUsername());
     }
 
     // ==== PETICIONES DE AMISTAD ======================================================================================

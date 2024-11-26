@@ -85,9 +85,10 @@ public interface ServerInterface extends Remote {
     // ==== BUSCAR USUARIOS ============================================================================================
 
     /**
-     * Buscar clientes por coincidencias de nombre, para agregar amigos
+     * Buscar clientes por coincidencias de nombre, para agregar amigos.
+     * `searcher` es la referencia del cliente que realiza la búsqueda.
      */
-    Collection<String> searchUsernames(String username) throws RemoteException;
+    Collection<String> searchUsernames(RemoteClient searcher, String username) throws RemoteException;
 
     // TODO: posibilidad para verificar la identidad de un usuario:
     //       El server comprueba si esta online y si contraseña es correcta

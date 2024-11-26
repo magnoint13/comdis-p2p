@@ -1,5 +1,6 @@
 package org.comdis.p2p;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
  * lento si se intenta usar en `contains` y similares. En su lugar, se almacena dicho
  * String en la memoria de esta máquina.
  */
-public class RemoteClient {
+public class RemoteClient implements Serializable {
     private final String username;
     private final ClientPtp handle;
 

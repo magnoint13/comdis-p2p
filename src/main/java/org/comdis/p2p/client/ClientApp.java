@@ -12,7 +12,9 @@ import org.comdis.p2p.server.MainServer;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
 
+/** Clase principal de la GUI del cliente. Abre la ventana de inicio de sesion y gestiona el cliente */
 public class ClientApp extends Application {
+    private static final String TITLE = "Programa de comunicacion P2P!";
     private static final int WINDOW_WIDTH = 600;
     private static final int WINDOW_HEIGHT = 400;
 
@@ -24,28 +26,17 @@ public class ClientApp extends Application {
     public void start(Stage stage) {
         try {
             // Iniciar la interfaz
+            // TODO: si funciona con poner Inicio.fxml no haria falta la ruta completa en las otras clases
             FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
             Scene scene = new Scene(fxmlLoader.load(), WINDOW_WIDTH, WINDOW_HEIGHT);
-            stage.setTitle("Programa de comunicación P2P!");
+            stage.setTitle(TITLE);
             stage.setScene(scene);
             stage.setResizable(false);
 
             // Obtener una referencia al servidor para el controller
             ServerInterface server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
             InicioController controller = fxmlLoader.getController();
-            controller.setServer(server);
             controller.TxtAviso.setVisible(false);
-
-            // Configurar el cierre de ventana
-            stage.setOnCloseRequest(event -> {
-                // Consumir el evento para evitar que se cierre inmediatamente
-                event.consume();
-                try {
-                    System.exit(0);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
 
             stage.show();
 

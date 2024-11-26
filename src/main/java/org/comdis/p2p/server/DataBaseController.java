@@ -63,7 +63,7 @@ class DataBaseController implements AutoCloseable {
 
                     if (!cmdTrim.isEmpty() && !cmdTrim.startsWith("--")) {
                         stmt.addBatch(cmdTrim);
-                        System.out.println("==== Ejecutar ====" + cmdTrim);
+                        System.out.println("==== Ejecutar ====\n" + cmdTrim);
                     }
                 }
 
@@ -221,16 +221,20 @@ class DataBaseController implements AutoCloseable {
         return friends;
     }
 
-    public ArrayList<String> searchUsernames(String username) {
+    /** Busca usuarios que contengan la subcadena `username` excepto aquellos que sean `exclude` */
+    public ArrayList<String> searchUsernames(String username, String exclude) {
         ArrayList<String> result = new ArrayList<>();
 
         try (PreparedStatement pst = connection.prepareStatement("""
                 select nombreUsuario as username
                 from Usuarios
                 where nombreUsuario like ?
+                  and nombreUsuario <> ?
                 """)
         ) {
             pst.setString(1, "%" + username + "%");
+            pst.setString(2, exclude);
+
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
                     result.add(rs.getString("username"));
@@ -386,6 +390,7 @@ class DataBaseController implements AutoCloseable {
             pst.setString(2, FriendStatus.PENDING.toString());
 
             try (ResultSet rs = pst.executeQuery()) {
+                System.out.println(pst);
                 while (rs.next()) {
                     requests.add(rs.getString("emisor"));
                 }

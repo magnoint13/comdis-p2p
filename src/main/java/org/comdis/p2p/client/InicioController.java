@@ -12,13 +12,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import org.comdis.p2p.ClientCallback;
-import org.comdis.p2p.ServerInterface;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 
 
 class InicioController {
@@ -32,68 +29,68 @@ class InicioController {
     @FXML
     public TextField TxtUser;
     @FXML
-    public TextField TxtPassword;
+    public TextField TxtPassword; // TODO: no se si hay PasswordField
     @FXML
     public Label TxtAviso;
 
-    private ServerInterface server;
+    private ClientCallbackImpl client;
 
-    public void setServer(ServerInterface server) {
-        this.server = server;
+    // PELIGRO DE NULLPOINTER: importante establecer el cliente antes de usar la clase
+    public void setClientRef(ClientCallbackImpl client) {
+        this.client = client;
     }
 
-
-    //La idea era cargar una imagen, pero su puta madre
+    // La idea era cargar una imagen, pero su puta madre
     public void loadImage() {
-        Image image = new Image(getClass().getResource("/org/example/compdis_p2p/client/resources/images/logo.png").toExternalForm());
+        Image image = new Image(getClass().getResource("/org/comdis/p2p/client/resources/images/logo.png").toExternalForm());
 
         // Crear un ImageView para mostrarla
         imageView = new ImageView(image);
     }
 
+    /** Inicio de sesion */
     @FXML
-    public void Singin(ActionEvent actionEvent) throws IOException {
+    public void logIn(ActionEvent actionEvent) throws IOException {
         if (TxtUser.getText().isEmpty() || TxtPassword.getText().isEmpty()) {
             TxtAviso.setVisible(true);
-        } else {
-            ClientCallbackImpl client = new ClientCallbackImpl(TxtUser.getText(), TxtPassword.getText());
-            try {
-                server.connect(client);
-                startMainWindow(client, server);
-            } catch (AuthException e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error de autenticación");
-                alert.setHeaderText("Usuario o contraseña incorrectos ");
-                alert.setContentText("Por favor revise sus credenciales o cree un usuario nuevo");
-                alert.showAndWait();
-            }
+            return;
+        }
+
+        try {
+            client.connect(TxtUser.getText(), TxtPassword.getText());
+            startMainWindow();
+
+        } catch (AuthException e) {
+            // TODO: no se muestra TxtAviso?
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error de autenticación");
+            alert.setHeaderText("Usuario o contraseña incorrectos ");
+            alert.setContentText("Por favor revise sus credenciales o cree un usuario nuevo");
+            alert.showAndWait();
         }
     }
 
+    /** Crear nuevo usuario */
     @FXML
-    public void Register(ActionEvent actionEvent) throws IOException {
+    public void registerNewUser(ActionEvent actionEvent) throws IOException {
         if (TxtUser.getText().isEmpty() || TxtPassword.getText().isEmpty()) {
             TxtAviso.setVisible(true);
-        } else {
-            ClientCallbackImpl client = new ClientCallbackImpl(TxtUser.getText(), TxtPassword.getText());
-            try {
-                server.addUser(client);
-                server.connect(client);
-                startMainWindow(client, server);
-            } catch (AlreadyExistsException e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error al resgistrarse");
-                alert.setHeaderText("Usuario ya existente ");
-                alert.setContentText("Por favor escoga un nombre de usuario diferente");
-                alert.showAndWait();
-            } catch (AuthException e) {
-                //No hace na
-            }
+            return;
+        }
+        try {
+            client.createUserAndConnect(TxtUser.getText(), TxtPassword.getText());
+            startMainWindow();
 
+        } catch (AlreadyExistsException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error al registrarse");
+            alert.setHeaderText("Usuario ya existente");
+            alert.setContentText("No se puede crear un usuario que ya existe. Seleccione otro nombre de usuario.");
+            alert.showAndWait();
         }
     }
 
-    private void startMainWindow(ClientCallback client, ServerInterface server) throws IOException {
+    private void startMainWindow() throws IOException {
         // Cargar el FXML para la nueva ventana
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/org/comdis/p2p/client/MainWindow.fxml"));
         Parent root = fxmlLoader.load();
@@ -101,17 +98,17 @@ class InicioController {
         // Crear una nueva escena con el FXML cargado
         Scene scene = new Scene(root, 600, 400);
 
-        MainWindowControlller controller = fxmlLoader.getController();
-
-        controller.setClient(client);
-        controller.setServer(server);
-        controller.iniciar();
+        MainWindowController controller = fxmlLoader.getController();
+        controller.setClientRef(client);
 
         // Obtener el stage actual y cambiar la escena
         Stage stage = (Stage) TxtUser.getScene().getWindow();
         stage.setScene(scene);
         stage.setResizable(false);
+        stage.show();
 
+        // TODO: dado que el cliente se cierra en otro sitio, esto ya no hace falta
+        /*
         stage.setOnCloseRequest(event -> {
             // Consumir el evento para evitar que se cierre inmediatamente
             event.consume();
@@ -122,6 +119,6 @@ class InicioController {
                 throw new RuntimeException(e);
             }
         });
-        stage.show();
+        */
     }
 }
