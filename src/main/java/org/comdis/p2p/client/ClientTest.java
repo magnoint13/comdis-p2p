@@ -1,63 +1,166 @@
 package org.comdis.p2p.client;
 
+import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
-import org.comdis.p2p.exceptions.PtpException;
-
 import java.rmi.RemoteException;
 
 class ClientTest {
-    // ==== ATRIBUTOS Y CONSTRUCTOR ====================================================================================
-
     public static void main(String[] args) throws RemoteException {
-
-        System.out.print("Nombre: ");
-        String username = System.console().readLine().trim();
-        System.out.print("Contraseña: ");
-        String password = System.console().readLine().trim();
-
+        boolean running = true;
         ClientCallbackImpl client = ClientCallbackImpl.getInstance();
 
-        System.out.print("Crear nuevo? (s/N): ");
-        String crear = System.console().readLine().trim();
-        if (crear.charAt(0) == 's' || crear.charAt(0) == 'S') {
-            try {
-                client.createUserAndConnect(username, password);
-                System.out.println("creado");
-            } catch (AlreadyExistsException error) {
-                System.out.println(error.getMessage());
-                System.exit(1);
-            }
-        } else {
-            try {
-                client.connect(username, password);
-            } catch (AuthException error) {
-                System.out.println(error.getMessage());
-                System.exit(1);
+        while (running) {
+            switch (menu()) {
+                // Conectar
+                case 1 -> {
+                    try {
+                        String username = askString("Usuario: ");
+                        String password = askString("Contraseña: ");
+                        client.connect(username, password);
+                    } catch (AuthException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                // Desconectar
+                case 2 -> client.disconnect();
+
+                // Crear usuario
+                case 3 -> {
+                    try {
+                        String username = askString("Usuario: ");
+                        String password = askString("Contraseña: ");
+                        client.createUserAndConnect(username, password);
+                    } catch (AlreadyExistsException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                // Borrar usuario
+                case 4 -> {
+                    try {
+                        String password = askString("Contraseña: ");
+                        client.deleteUser(password);
+                    } catch (AuthException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                // Ver amigos online
+                case 5 -> {
+                    int i = 1;
+                    for (RemoteClient username : client.getFriendsOnline()) {
+                        System.out.printf("\t%d) %s\n", i, username.getUsername());
+                        i += 1;
+                    }
+                }
+
+                // Buscar usuarios
+                case 6 -> {
+                    String query = askString("Buscar: ");
+                    int i = 1;
+                    for (String username : client.searchUsernames(query)) {
+                        System.out.printf("\t%d) %s\n", i, username);
+                        i += 1;
+                    }
+                }
+
+                // Enviar mensaje
+                case 7 -> {
+                    try {
+                        String username = askString("Username: ");
+                        String msg = askString("Mensaje: ");
+                        client.sendMessage(username, msg);
+                    } catch (NotFoundException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                // Ver peticiones de amistad
+                case 8 -> {
+                    int i = 1;
+                    for (String peticion : client.getPendingRequests()) {
+                        System.out.printf("\t%d) %s\n", i, peticion);
+                        i += 1;
+                    }
+                }
+
+                // Enviar peticion de amistad
+                case 9 -> {
+                    try {
+                        String username = askString("Usuario: ");
+                        client.sendFriendRequest(username);
+                    } catch (AlreadyExistsException | NotFoundException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                // Aceptar peticion de amistad
+                case 10 -> {
+                    try {
+                        String username = askString("Usuario: ");
+                        client.acceptFriendRequest(username);
+                    } catch (AlreadyExistsException | NotFoundException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                // Cancelar peticion de amistad
+                case 11 -> {
+                    try {
+                        String username = askString("Usuario: ");
+                        client.cancelFriendRequest(username);
+                    } catch (NotFoundException e) {
+                        System.out.println("ERROR: " + e.getMessage());
+                    }
+                }
+
+                case 99 -> running = false;
+                default -> System.out.println("Numero invalido");
             }
         }
 
-        System.out.print("Solicitud de amistad ? (s/N): ");
-        String enviarSol = System.console().readLine().trim();
-        if (enviarSol.charAt(0) == 's' || enviarSol.charAt(0) == 'S') {
-            try {
-                System.out.print("Nombre de usuario: ");
-                String petUser = System.console().readLine().trim();
-                client.sendFriendRequest(petUser);
-            } catch (PtpException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        // Asegurarse de desconectar anes de salir
+        client.close();
+    }
 
-        System.out.print("Mensaje a: ");
-        String friendUsername = System.console().readLine().trim();
-        System.out.print("Mensaje: ");
-        String msg = System.console().readLine().trim();
-        try {
-            client.sendMessage(friendUsername, msg);
-        } catch (NotFoundException error) {
-            System.out.println(error.getMessage());
+    private static int menu() {
+        while (true) {
+            try {
+                System.out.println("""
+                        ==== PROGRAMA DE PRUEBA DE CLIENTE P2P ====
+                          1. Conectar
+                          2. Desconectar
+                          3. Crear usuario
+                          4. Borrar usuario
+                          5. Ver amigos online
+                          6. Buscar usuarios
+                          7. Enviar mensaje
+                          8. Ver peticiones de amistad
+                          9. Enviar peticion de amistad
+                         10. Aceptar peticion de amistad
+                         11. Cancelar peticion de amistad
+                         99. Salir
+                        Seleccione uno:""");
+                return Integer.parseInt(System.console().readLine().trim());
+            } catch (NumberFormatException _) {
+                System.out.println("Numero invalido");
+            }
         }
     }
+
+    private static String askString(String prompt) {
+        System.out.println(prompt);
+        return System.console().readLine().trim();
+    }
 }
+
+/*
+ * TODO: Problemas encontrados:
+ * - Conectarse como usuario A, crear usuario B, salir. A nunca se desconecta.
+ * - Por algun motivo, el nombre del remitente cuando ClientCallbackImpl recibe un mensaje no es correcto
+ *
+ *
+ */

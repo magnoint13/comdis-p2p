@@ -57,7 +57,13 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
         ArrayList<String> friends = database.getFriends(username);
         ArrayList<RemoteClient> onlineFriends = new ArrayList<>();
 
-        System.out.printf("Amigos online: %s\n", friends);
+        // Debug only
+        System.out.println("Amigos:");
+        for (String friendUsername : friends) {
+            System.out.printf("\t%s\n", friendUsername);
+        }
+
+        System.out.println("Amigos online:");
         for (String friendUsername : friends) {
             Client friend = connectedClients.get(friendUsername);
 
@@ -69,6 +75,7 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
                 System.out.println("\t" + friend.getUsername());
             }
         }
+        System.out.println(); // Línea en blanco
 
         // Enviar al nuevo cliente quienes están conectados
         newClient.friendsOnline(onlineFriends);
@@ -116,6 +123,7 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
                 System.out.println("\t" + friend.getUsername());
             }
         }
+        System.out.println(); // Línea en blanco
     }
 
     // ==== CREAR/BORRAR USUARIOS ======================================================================================
@@ -155,6 +163,16 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     public void acceptFriendRequest(RemoteClient accepts, String originalSender) throws NotFoundException, RemoteException, AlreadyExistsException {
         database.acceptFriendRequest(accepts.getUsername(), originalSender);
         // TODO: notificar a originalSender que se ha aceptado
+
+        // Si los usuarios están conectados, entonces se les notifica que están online
+        // De esta forma, podran empezar a mandarse mensajes
+        Client clientA = connectedClients.get(accepts.getUsername());
+        Client clientB = connectedClients.get(originalSender);
+
+        if (clientA != null && clientB != null) {
+            clientA.friendConnected(clientB.getHandle());
+            clientB.friendConnected(clientA.getHandle());
+        }
     }
 
     @Override

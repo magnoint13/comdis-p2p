@@ -61,18 +61,6 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
         // TODO: recibir de la GUI la URL?
         server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
         friendsOnline = new ConcurrentHashMap<>();
-
-        // TODO: puede que no funcione. Para que la JVM termine, se tiene que quitar el objeto remoto,
-        //       que se hace precisamente en el close que se ejecuta a continuacion.
-        // Como al final de la ejecucion se necesita cerrar la conexion, se configura un shutdownHook
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                ClientCallbackImpl.getInstance().close();
-            } catch (RemoteException e) {
-                PtpException.logError(e);
-                System.exit(1);
-            }
-        }));
     }
 
     // ==== CONECTAR Y DESCONECTAR =====================================================================================
@@ -98,8 +86,10 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
         disconnect();
 
         // Quitar el objeto remoto para que la JVM pueda terminar
-        UnicastRemoteObject.unexportObject(this, true);
-        server = null;
+        if (server != null) {
+            UnicastRemoteObject.unexportObject(this, true);
+            server = null;
+        }
     }
 
     // ==== GETTERS ====================================================================================================

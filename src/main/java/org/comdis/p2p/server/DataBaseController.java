@@ -390,7 +390,6 @@ class DataBaseController implements AutoCloseable {
             pst.setString(2, FriendStatus.PENDING.toString());
 
             try (ResultSet rs = pst.executeQuery()) {
-                System.out.println(pst);
                 while (rs.next()) {
                     requests.add(rs.getString("emisor"));
                 }
