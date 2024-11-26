@@ -1,4 +1,4 @@
-package org.example.compdis_p2p.client;
+package org.comdis.p2p.client;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -6,7 +6,9 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import org.example.compdis_p2p.server.ServerInterface;
+import org.comdis.p2p.ClientCallback;
+import org.comdis.p2p.ClientPtp;
+import org.comdis.p2p.ServerInterface;
 
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -17,10 +19,6 @@ public class MainWindowControlller {
 
     @FXML
     public ListView PendingRequests;
-    private ClientInterface client;
-
-    private ServerInterface server;
-
     @FXML
     public ListView UsersList;
     @FXML
@@ -39,8 +37,10 @@ public class MainWindowControlller {
     public ScrollPane ChatPane;
     @FXML
     public VBox Chat;
+    private ClientCallback client;
+    private ServerInterface server;
 
-    public void setClient(ClientInterface client) {
+    public void setClient(ClientCallback client) {
         this.client = client;
     }
 
@@ -52,7 +52,7 @@ public class MainWindowControlller {
         BorderPane.setVisible(false);
         //ChatInfo.setVisible(false);
 
-        if(!client.getFriendsOnline().isEmpty()){
+        if (!client.getFriendsOnline().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Contactos");
             alert.setHeaderText("Amigos conectados:");
@@ -62,14 +62,14 @@ public class MainWindowControlller {
         //Amigos
         Contacts.getItems().clear();
         Contacts.getItems().addAll(client.getFriendsOnline());
-       // javafx.collections.ObservableList<String> items = javafx.collections.FXCollections.observableArrayList();
-       // for (ClientPtp c : client.getFriendsOnline()) {
-       //     items.add(c.getUsername());
-       // }
-       // Contacts.setItems(items);
+        // javafx.collections.ObservableList<String> items = javafx.collections.FXCollections.observableArrayList();
+        // for (ClientPtp c : client.getFriendsOnline()) {
+        //     items.add(c.getUsername());
+        // }
+        // Contacts.setItems(items);
 
         //Peticiones de amistad
-        if(!client.getPendingRequests().isEmpty()){
+        if (!client.getPendingRequests().isEmpty()) {
             //Mostrar las solicitudes pendientes
             PendingRequests.getItems().clear();
             PendingRequests.getItems().addAll(client.getPendingRequests());
@@ -88,7 +88,7 @@ public class MainWindowControlller {
 
     @FXML
     public void sendMessage(ActionEvent actionEvent) {
-       // server.
+        // server.
     }
 
     @FXML
@@ -103,9 +103,8 @@ public class MainWindowControlller {
     @FXML
     public void searchUsers(ActionEvent actionEvent) throws RemoteException {
         if (TxtSearchUsers.getText().isEmpty()) {
-            return;
-        }else{
-            Collection<ClientPtp> result = server.searchClientsByName(TxtSearchUsers.getText());
+        } else {
+            Collection<ClientPtp> result = server.searchUsernames(TxtSearchUsers.getText());
             UsersList.getItems().clear();
             javafx.collections.ObservableList<String> items = javafx.collections.FXCollections.observableArrayList();
             for (ClientPtp c : result) {
@@ -119,27 +118,26 @@ public class MainWindowControlller {
     }
 
 
-
     //SOLICITUDES
 
     @FXML
     public void sendFriendRequest(ActionEvent actionEvent) throws RemoteException {
         String other = (String) UsersList.getSelectionModel().getSelectedItem();
-        if(server.alreadyFriendRequest(client,other)){
+        if (server.alreadyFriendRequest(client, other)) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Solicitud existente");
             alert.setHeaderText("Ya hay una solicitud pendiente");
             alert.setContentText("Espere a la respuesta del otro usuario");
             alert.showAndWait();
-        }else {
-            server.sendFriendRequest(client,other);
+        } else {
+            server.sendFriendRequest(client, other);
         }
     }
 
     @FXML
     public void acceptFriendRequest(ActionEvent actionEvent) throws RemoteException {
         System.out.println("Has aceptado la solicitud de " + PendingRequests.getSelectionModel().getSelectedItem());
-        server.createFriendship(client,(String) PendingRequests.getSelectionModel().getSelectedItem());
+        server.createFriendship(client, (String) PendingRequests.getSelectionModel().getSelectedItem());
         PendingRequests.getItems().remove(PendingRequests.getSelectionModel().getSelectedItem());
     }
 
@@ -157,7 +155,6 @@ public class MainWindowControlller {
         String selectedItem = (String) UsersList.getSelectionModel().getSelectedItem();
         System.out.println("Has seleccionado a " + selectedItem);
     }
-
 
 
 }

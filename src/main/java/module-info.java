@@ -15,10 +15,12 @@ module org.example.compdis_p2p {
     requires org.xerial.sqlitejdbc;
     requires java.desktop;
 
-    opens org.example.compdis_p2p to javafx.fxml;
-    exports org.example.compdis_p2p;
-    exports org.example.compdis_p2p.server;
-    opens org.example.compdis_p2p.server to javafx.fxml;
-    exports org.example.compdis_p2p.client;
-    opens org.example.compdis_p2p.client to javafx.fxml;
+    opens org.comdis.p2p to javafx.fxml;
+    exports org.comdis.p2p;
+    exports org.comdis.p2p.server;
+    opens org.comdis.p2p.server to javafx.fxml;
+    exports org.comdis.p2p.client;
+    opens org.comdis.p2p.client to javafx.fxml;
+    exports org.comdis.p2p.exceptions;
+    opens org.comdis.p2p.exceptions to javafx.fxml;
 }

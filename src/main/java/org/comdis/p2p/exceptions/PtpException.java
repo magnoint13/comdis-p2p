@@ -1,4 +1,4 @@
-package org.example.compdis_p2p;
+package org.comdis.p2p.exceptions;
 
 import org.sqlite.SQLiteException;
 

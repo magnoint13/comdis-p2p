@@ -1,6 +1,6 @@
-package org.example.compdis_p2p.server;
+package org.comdis.p2p.server;
 
-import org.example.compdis_p2p.PtpException;
+import org.comdis.p2p.exceptions.PtpException;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;

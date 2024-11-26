@@ -2,7 +2,7 @@
   <configuration default="false" name="Server" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="openjdk-23" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-    <option name="MAIN_CLASS_NAME" value="org.example.compdis_p2p.server.MainServer" />
+    <option name="MAIN_CLASS_NAME" value="org.comdis.p2p.server.MainServer" />
     <module name="P5_CompDis" />
     <method v="2">
       <option name="Make" enabled="true" />

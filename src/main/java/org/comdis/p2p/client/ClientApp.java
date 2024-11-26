@@ -1,13 +1,13 @@
-package org.example.compdis_p2p.client;
+package org.comdis.p2p.client;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
-import org.example.compdis_p2p.PtpException;
-import org.example.compdis_p2p.server.MainServer;
-import org.example.compdis_p2p.server.ServerInterface;
+import org.comdis.p2p.ServerInterface;
+import org.comdis.p2p.exceptions.PtpException;
+import org.comdis.p2p.server.MainServer;
 
 import java.rmi.ConnectException;
 import java.rmi.Naming;
