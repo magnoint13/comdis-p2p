@@ -42,7 +42,9 @@ class ClientTest {
                 case 4 -> {
                     try {
                         String password = askString("Contraseña: ");
-                        client.deleteUser(password);
+                        String username = client.getUsername(); //Luego handle se hace null y peta por el disconnect
+                        client.disconnect();
+                        client.deleteUser(username,password);
                     } catch (AuthException e) {
                         System.out.println("ERROR: " + e.getMessage());
                     }

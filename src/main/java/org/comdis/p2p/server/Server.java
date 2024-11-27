@@ -94,6 +94,7 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
         // Si no estaba conectado, no hacer nada
         if (client == null) {
+            System.out.println("No se encuentra conectado al servidor");
             return;
         }
 

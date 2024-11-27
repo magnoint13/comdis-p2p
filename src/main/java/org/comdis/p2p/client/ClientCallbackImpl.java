@@ -67,10 +67,17 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
 
     public void connect(String username, String password) throws AuthException {
         try {
-            handle = server.connect(username, password, this, this);
-        } catch (RemoteException e) {
-            // TODO: quizas mejor especializar las excepciones y hacer un mejor tratamiento de errores
-            PtpException.logError(e);
+            if(handle != null) {
+                throw new AlreadyExistsException("El usuario ya esta conectado".formatted(username));
+            }
+        } catch (AlreadyExistsException e) {
+            try {
+                disconnect();
+                handle = server.connect(username, password, this, this);
+            } catch (RemoteException error) {
+                // TODO: quizas mejor especializar las excepciones y hacer un mejor tratamiento de errores
+                PtpException.logError(error);
+            }
         }
     }
 
@@ -123,8 +130,8 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
     }
 
     /** Nota: lanza NullPointerException cuando no esta conectado */
-    public void deleteUser(String password) throws AuthException, RemoteException {
-        server.deleteUser(handle.getUsername(), password);
+    public void deleteUser(String username,String password) throws AuthException, RemoteException {
+        server.deleteUser(username, password);
         // TODO: no estoy muy seguro de esto
         close();
     }
@@ -147,17 +154,18 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
 
     // ==== ENVIAR MENSAJE =============================================================================================
 
-    public void sendMessage(RemoteClient friendHandle, String msg) throws RemoteException {
-        friendHandle.message(msg);
+    public void sendMessage(RemoteClient friendHandle,RemoteClient sender, String msg) throws RemoteException {
+        friendHandle.message(sender,msg);
     }
 
     public void sendMessage(String friend, String msg) throws RemoteException, NotFoundException {
         RemoteClient friendHandle = friendsOnline.get(friend);
+        //TODO: a lo mejor lanzar un mensaje mas especifico, puede no existir el usuario simplemente
         if (friendHandle == null) {
             throw new NotFoundException("El usuario \"%s\" no esta online".formatted(friend));
         }
 
-        sendMessage(friendHandle, msg);
+        sendMessage(friendHandle,handle, msg);
     }
 
     // =================================================================================================================

@@ -27,8 +27,8 @@ public class RemoteClient implements Serializable {
         return username;
     }
 
-    public void message(String msg) throws RemoteException {
-        handle.message(this, msg);
+    public void message(RemoteClient sender,String msg) throws RemoteException {
+        handle.message(sender, msg);
     }
 
     @Override
