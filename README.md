@@ -189,3 +189,7 @@ public interface ClientPtp extends Remote {
     void getUsername();
 }
 ```
+
+# Dudas
+
+- ¿Puede un cliente estar conectado dos veces? ¿Aunque sea en dos dispositivos?

@@ -1,13 +1,13 @@
 package org.comdis.p2p.client;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.NotFoundException;
@@ -18,7 +18,7 @@ import java.util.Collection;
 
 
 //TODO: NOTIFICAR AL CLIENTE CUANDO ESTA ONLINE
-class MainWindowController {
+public class MainWindowController {
 
     // Objetos de la interfaz
     @FXML
@@ -42,20 +42,12 @@ class MainWindowController {
     @FXML
     private VBox Chat;
 
-    // Referencia al cliente para poder interactuar con él
-    private ClientCallbackImpl client;
-
-    // PELIGRO DE NULLPOINTER: importante establecer el cliente antes de usar la clase
-    public void setClientRef(ClientCallbackImpl client) {
-        this.client = client;
-    }
-
     @FXML
     public void initialize() {
         BorderPane.setVisible(false);
 
         // Notificar de los amigos ya conectados
-        Collection<RemoteClient> friendsOnline = client.getFriendsOnline();
+        Collection<RemoteClient> friendsOnline = ClientImpl.getInstance().getFriendsOnline();
         if (!friendsOnline.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Contactos");
@@ -63,7 +55,7 @@ class MainWindowController {
 
             StringBuilder builder = new StringBuilder();
 
-            for (RemoteClient friend: friendsOnline) {
+            for (RemoteClient friend : friendsOnline) {
                 builder.append(friend.getUsername());
                 builder.append('\n');
             }
@@ -72,12 +64,12 @@ class MainWindowController {
         }
 
         // Mostrar los amigos
-        // TODO: el cliente tiene copias repetidas de esto (en ClientCallbackImpl y aqui)
+        // TODO: el cliente tiene copias repetidas de esto (en ClientImpl y aqui)
         Contacts.getItems().clear();
         Contacts.getItems().addAll(friendsOnline);
 
         // Notificar de las peticiones de amistad pendientes
-        Collection<String> pendingRequests = client.getPendingRequests();
+        Collection<String> pendingRequests = ClientImpl.getInstance().getPendingRequests();
         if (!pendingRequests.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Solicitudes pendientes");
@@ -99,8 +91,7 @@ class MainWindowController {
 
             // Mostrar las solicitudes pendientes
             PendingRequests.getItems().clear();
-            PendingRequests.getItems().addAll(client.getPendingRequests());
-
+            PendingRequests.getItems().addAll(ClientImpl.getInstance().getPendingRequests());
         }
     }
 
@@ -127,7 +118,7 @@ class MainWindowController {
         }
 
         try {
-            Collection<String> result = client.searchUsernames(TxtSearchUsers.getText());
+            Collection<String> result = ClientImpl.getInstance().searchUsernames(TxtSearchUsers.getText());
             UsersList.getItems().clear();
             ObservableList<String> items = FXCollections.observableArrayList();
             items.addAll(result);
@@ -150,7 +141,7 @@ class MainWindowController {
     public void sendFriendRequest(ActionEvent actionEvent) {
         String other = UsersList.getSelectionModel().getSelectedItem();
         try {
-            client.sendFriendRequest(other);
+            ClientImpl.getInstance().sendFriendRequest(other);
 
         } catch (AlreadyExistsException e) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -172,11 +163,11 @@ class MainWindowController {
     }
 
     @FXML
-    public void acceptFriendRequest(ActionEvent actionEvent) throws RemoteException {
+    public void acceptFriendRequest(ActionEvent actionEvent) {
         String newFriend = PendingRequests.getSelectionModel().getSelectedItem();
 
         try {
-            client.acceptFriendRequest(newFriend);
+            ClientImpl.getInstance().acceptFriendRequest(newFriend);
             System.out.println("Has aceptado la solicitud de " + newFriend);
             PendingRequests.getItems().remove(newFriend);
 
@@ -213,7 +204,7 @@ class MainWindowController {
     //Nada, metodo inncecesario por ahora, ignorar
     @FXML
     public void printsSelectedUser(MouseEvent mouseEvent) {
-        String selectedItem = (String) UsersList.getSelectionModel().getSelectedItem();
+        String selectedItem = UsersList.getSelectionModel().getSelectedItem();
         System.out.println("Has seleccionado a " + selectedItem);
     }
 }

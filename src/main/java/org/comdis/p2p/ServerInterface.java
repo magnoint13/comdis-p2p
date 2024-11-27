@@ -80,7 +80,7 @@ public interface ServerInterface extends Remote {
     /*FriendStatus getFriendshipStatus(RemoteClient client, String other)
             throws NotFoundException, RemoteException;*/
 
-    // TODO: eliminar amigo
+    // TODO: eliminar amigo (recordar notificar a cada uno que esta offline)
 
     // ==== BUSCAR USUARIOS ============================================================================================
 

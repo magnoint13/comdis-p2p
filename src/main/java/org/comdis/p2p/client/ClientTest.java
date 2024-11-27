@@ -4,12 +4,13 @@ import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
+
 import java.rmi.RemoteException;
 
 class ClientTest {
     public static void main(String[] args) throws RemoteException {
         boolean running = true;
-        ClientCallbackImpl client = ClientCallbackImpl.getInstance();
+        ClientImpl client = ClientImpl.getInstance();
 
         while (running) {
             switch (menu()) {
@@ -19,7 +20,7 @@ class ClientTest {
                         String username = askString("Usuario: ");
                         String password = askString("Contraseña: ");
                         client.connect(username, password);
-                    } catch (AuthException e) {
+                    } catch (AuthException | AlreadyExistsException e) {
                         System.out.println("ERROR: " + e.getMessage());
                     }
                 }
@@ -44,7 +45,7 @@ class ClientTest {
                         String password = askString("Contraseña: ");
                         String username = client.getUsername(); //Luego handle se hace null y peta por el disconnect
                         client.disconnect();
-                        client.deleteUser(username,password);
+                        client.deleteUser(username, password);
                     } catch (AuthException e) {
                         System.out.println("ERROR: " + e.getMessage());
                     }
@@ -158,11 +159,3 @@ class ClientTest {
         return System.console().readLine().trim();
     }
 }
-
-/*
- * TODO: Problemas encontrados:
- * - Conectarse como usuario A, crear usuario B, salir. A nunca se desconecta.
- * - Por algun motivo, el nombre del remitente cuando ClientCallbackImpl recibe un mensaje no es correcto
- *
- *
- */

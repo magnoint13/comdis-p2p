@@ -221,7 +221,9 @@ class DataBaseController implements AutoCloseable {
         return friends;
     }
 
-    /** Busca usuarios que contengan la subcadena `username` excepto aquellos que sean `exclude` */
+    /**
+     * Busca usuarios que contengan la subcadena `username` excepto aquellos que sean `exclude`
+     */
     public ArrayList<String> searchUsernames(String username, String exclude) {
         ArrayList<String> result = new ArrayList<>();
 

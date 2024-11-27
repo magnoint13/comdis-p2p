@@ -1,0 +1,69 @@
+/* https://openjfx.io/javadoc/21/javafx.graphics/javafx/scene/doc-files/cssref.html */
+#leftPane {
+    -fx-background-color: limegreen;
+    -fx-min-width: 250px;
+    -fx-max-width: 250px;
+    -fx-pref-width: 250px;
+}
+
+#rightPane {
+    -fx-alignment: center;
+    -fx-padding: 25px;
+    -fx-fill-height: true;
+    -fx-fill-width: true;
+}
+
+#formPane {
+    -fx-alignment: center;
+    -fx-padding: 25px;
+    -fx-vgap: 5px;
+    -fx-hgap: 5px;
+
+    -fx-min-width: 350px;
+    -fx-max-width: 400px;
+}
+
+#btnPane {
+    -fx-alignment: center-right;
+    -fx-padding: 25px;
+    -fx-vgap: 5px;
+    -fx-hgap: 5px;
+}
+
+#txtAppName {
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-text-overrun: clip;
+    -fx-font: bold 20 system;
+}
+
+#txtTitle {
+    -fx-text-fill: limegreen;
+    -fx-font: 28 system;
+}
+
+#txtUser, #txtPassword {
+    -fx-text-fill: limegreen;
+    -fx-font: 16 system;
+}
+
+#username, #password {
+    -fx-border-color: limegreen;
+}
+
+#txtError {
+    -fx-text-alignment: center;
+    -fx-text-fill: red;
+    -fx-font: bold 16 system;
+}
+
+#btnLogIn, #btnRegister {
+    -fx-background-color: limegreen;
+    -fx-text-fill: white;
+    -fx-font: bold 16 system;
+    -fx-cursor: hand;
+}
+
+#btnLogIn:hover, #btnRegister:hover {
+    -fx-background-color: green;
+}

@@ -8,7 +8,6 @@ import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
 import org.comdis.p2p.exceptions.PtpException;
-import org.comdis.p2p.server.MainServer;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -27,58 +26,47 @@ import java.util.concurrent.ConcurrentHashMap;
  * <br><br>
  * Ninguna clase deberia interactuar con el servidor sin pasar por esta clase.
  */
-class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, ClientPtp, AutoCloseable {
+class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPtp, AutoCloseable {
 
     // ==== SINGLETON ==================================================================================================
 
-    private static final ClientCallbackImpl instance;
+    private static ClientImpl instance;
+    private final transient ConcurrentHashMap<String, RemoteClient> friendsOnline;
+    private transient ServerInterface server;
 
-    static {
-        try {
-            instance = new ClientCallbackImpl();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    // ==== CONSTRUCTOR ================================================================================================
+    private transient RemoteClient handle;
+    private transient Collection<String> usersPendingRequests;
+    private ClientImpl() throws RemoteException {
+        super();
+        friendsOnline = new ConcurrentHashMap<>();
     }
 
-    public static ClientCallbackImpl getInstance() {
+    public static ClientImpl create() throws RemoteException {
+        if (instance == null) {
+            instance = new ClientImpl();
+        }
+
         return instance;
     }
 
-    // ==== CONSTRUCTOR ================================================================================================
-
-    private transient ServerInterface server;
-    private transient RemoteClient handle;
-
-    private transient ConcurrentHashMap<String, RemoteClient> friendsOnline;
-    private transient Collection<String> usersPendingRequests;
-
-    private ClientCallbackImpl() throws RemoteException, MalformedURLException, NotBoundException {
-        super();
-
-        // Se necesita obtener la referencia al servidor ahora, porque hay peticiones
-        // (como crear usuario) que no requieren de que este conectado.
-        // TODO: recibir de la GUI la URL?
-        server = (ServerInterface) Naming.lookup(MainServer.REGISTRY_URL);
-        friendsOnline = new ConcurrentHashMap<>();
+    public static ClientImpl getInstance() {
+        return instance;
     }
 
     // ==== CONECTAR Y DESCONECTAR =====================================================================================
 
-    public void connect(String username, String password) throws AuthException {
-        try {
-            if(handle != null) {
-                throw new AlreadyExistsException("El usuario ya esta conectado".formatted(username));
-            }
-        } catch (AlreadyExistsException e) {
-            try {
-                disconnect();
-                handle = server.connect(username, password, this, this);
-            } catch (RemoteException error) {
-                // TODO: quizas mejor especializar las excepciones y hacer un mejor tratamiento de errores
-                PtpException.logError(error);
-            }
+    public void serverConnect(String url) throws MalformedURLException, NotBoundException, RemoteException {
+        server = (ServerInterface) Naming.lookup(url);
+    }
+
+    public void connect(String username, String password) throws AuthException, AlreadyExistsException, RemoteException {
+        if (isOnline()) {
+            throw new AlreadyExistsException("El usuario ya esta conectado como \"%s\"".formatted(handle.getUsername()));
         }
+
+        disconnect();
+        handle = server.connect(username, password, this, this);
     }
 
     public void disconnect() throws RemoteException {
@@ -129,11 +117,12 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
         }
     }
 
-    /** Nota: lanza NullPointerException cuando no esta conectado */
-    public void deleteUser(String username,String password) throws AuthException, RemoteException {
+    /**
+     * Nota: lanza NullPointerException cuando no esta conectado
+     */
+    public void deleteUser(String username, String password) throws AuthException, RemoteException {
         server.deleteUser(username, password);
-        // TODO: no estoy muy seguro de esto
-        close();
+        disconnect();
     }
 
     public Collection<String> searchUsernames(String username) throws RemoteException {
@@ -154,18 +143,20 @@ class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback, 
 
     // ==== ENVIAR MENSAJE =============================================================================================
 
-    public void sendMessage(RemoteClient friendHandle,RemoteClient sender, String msg) throws RemoteException {
-        friendHandle.message(sender,msg);
+    public void sendMessage(RemoteClient friendHandle, String msg) throws RemoteException {
+        friendHandle.sendMessage(handle, msg);
     }
 
     public void sendMessage(String friend, String msg) throws RemoteException, NotFoundException {
         RemoteClient friendHandle = friendsOnline.get(friend);
-        //TODO: a lo mejor lanzar un mensaje mas especifico, puede no existir el usuario simplemente
+        // TODO: a lo mejor lanzar un mensaje mas especifico, puede no existir el usuario simplemente
+        //       El problema es que para saber si existe realmente, hace falta consultar al server.
+        //       Creo que para un mensaje de error es innecesario.
         if (friendHandle == null) {
             throw new NotFoundException("El usuario \"%s\" no esta online".formatted(friend));
         }
 
-        sendMessage(friendHandle,handle, msg);
+        sendMessage(friendHandle, msg);
     }
 
     // =================================================================================================================
