@@ -23,6 +23,7 @@ public class MainWindowController {
     @FXML private TextField inputMsg;
 
     @FXML private ChatView chat;
+    @FXML private SplitPane splitPane;
     @FXML private VBox emptyChatPane;
     @FXML private VBox chatPane;
 
@@ -32,6 +33,9 @@ public class MainWindowController {
 
     @FXML
     public void initialize() {
+        // TODO: mostrar al seleccionar un chat. Tambien esconder emptyChatPane
+        emptyChatPane.setVisible(false);
+
         // Notificar de los amigos ya conectados
         Collection<RemoteClient> friendsOnline = ClientImpl.getInstance().getFriendsOnline();
         if (!friendsOnline.isEmpty()) {
@@ -53,6 +57,18 @@ public class MainWindowController {
         // TODO: el cliente tiene copias repetidas de esto (en ClientImpl y aqui)
         contacts.getItems().clear();
         contacts.getItems().addAll(friendsOnline);
+        contacts.getItems().addAll(
+                new RemoteClient("test00", null),
+                new RemoteClient("test01", null),
+                new RemoteClient("test02", null),
+                new RemoteClient("test03", null),
+                new RemoteClient("test04", null),
+                new RemoteClient("test05", null),
+                new RemoteClient("test06", null),
+                new RemoteClient("test07", null),
+                new RemoteClient("test08", null),
+                new RemoteClient("test09", null),
+                new RemoteClient("test10", null));
 
         // Notificar de las peticiones de amistad pendientes
         Collection<String> pendingRequests = ClientImpl.getInstance().getPendingRequests();

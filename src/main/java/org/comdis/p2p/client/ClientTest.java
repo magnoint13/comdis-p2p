@@ -4,13 +4,17 @@ import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
+import org.comdis.p2p.server.MainServer;
 
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 class ClientTest {
-    public static void main(String[] args) throws RemoteException {
+    public static void main(String[] args) throws RemoteException, MalformedURLException, NotBoundException {
         boolean running = true;
-        ClientImpl client = ClientImpl.getInstance();
+        ClientImpl client = ClientImpl.create();
+        client.serverConnect(MainServer.REGISTRY_URL);
 
         while (running) {
             switch (menu()) {

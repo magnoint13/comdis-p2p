@@ -13,22 +13,23 @@
     <!-- =========================================================================================================== -->
 
     <Tab text="Chats">
-        <SplitPane>
+        <SplitPane fx:id="splitPane">
 
             <ListView fx:id="contacts"/>
 
-            <VBox fx:id="emptyChatPane" styleClass="background-panel">
-                <Label fx:id="lblTip" text="Seleccione un contacto"/>
-            </VBox>
+            <StackPane>
+                <VBox fx:id="emptyChatPane" styleClass="background-panel">
+                    <Label fx:id="lblTip" text="Seleccione un contacto"/>
+                </VBox>
 
-            <VBox fx:id="chatPane" styleClass="background-panel">
-                <ChatView fx:id="chat" VBox.vgrow="ALWAYS" styleClass="background-panel"/>
-                <HBox styleClass="toolbar">
-                    <TextField fx:id="inputMsg" HBox.hgrow="ALWAYS" promptText="Escribe un mensaje"/>
-                    <Button onAction="#sendMessage" text="Enviar"/>
-                </HBox>
-            </VBox>
-
+                <VBox fx:id="chatPane" styleClass="background-panel">
+                    <ChatView fx:id="chat" VBox.vgrow="ALWAYS" styleClass="background-panel"/>
+                    <HBox styleClass="toolbar">
+                        <TextField fx:id="inputMsg" HBox.hgrow="ALWAYS" promptText="Escribe un mensaje"/>
+                        <Button onAction="#sendMessage" text="Enviar"/>
+                    </HBox>
+                </VBox>
+            </StackPane>
         </SplitPane>
     </Tab>
 

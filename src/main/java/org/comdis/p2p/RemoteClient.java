@@ -32,6 +32,11 @@ public class RemoteClient implements Serializable {
     }
 
     @Override
+    public String toString() {
+        return username;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
