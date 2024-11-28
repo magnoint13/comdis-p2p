@@ -6,7 +6,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
@@ -17,35 +16,22 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 
 
-//TODO: NOTIFICAR AL CLIENTE CUANDO ESTA ONLINE
+// TODO: notificar al cliente cuando esta online
 public class MainWindowController {
 
-    // Objetos de la interfaz
-    @FXML
-    private ListView<String> PendingRequests;
-    @FXML
-    private ListView<String> UsersList;
-    @FXML
-    private ListView<RemoteClient> Contacts;
-    @FXML
-    private TextField TxtSearchUsers;
-    @FXML
-    private javafx.scene.layout.BorderPane BorderPane;
-    @FXML
-    private HBox ChatInfo;
-    @FXML
-    private TextArea TxtMensaje;
-    @FXML
-    private Button BtnSend;
-    @FXML
-    private ScrollPane ChatPane;
-    @FXML
-    private VBox Chat;
+    @FXML private TextField inputSearchUsers;
+    @FXML private TextField inputMsg;
+
+    @FXML private ChatView chat;
+    @FXML private VBox emptyChatPane;
+    @FXML private VBox chatPane;
+
+    @FXML private ListView<String> pendingRequests;
+    @FXML private ListView<String> searchResult;
+    @FXML private ListView<RemoteClient> contacts;
 
     @FXML
     public void initialize() {
-        BorderPane.setVisible(false);
-
         // Notificar de los amigos ya conectados
         Collection<RemoteClient> friendsOnline = ClientImpl.getInstance().getFriendsOnline();
         if (!friendsOnline.isEmpty()) {
@@ -65,8 +51,8 @@ public class MainWindowController {
 
         // Mostrar los amigos
         // TODO: el cliente tiene copias repetidas de esto (en ClientImpl y aqui)
-        Contacts.getItems().clear();
-        Contacts.getItems().addAll(friendsOnline);
+        contacts.getItems().clear();
+        contacts.getItems().addAll(friendsOnline);
 
         // Notificar de las peticiones de amistad pendientes
         Collection<String> pendingRequests = ClientImpl.getInstance().getPendingRequests();
@@ -90,8 +76,8 @@ public class MainWindowController {
             //new Alert(Alert.AlertType.INFORMATION, "Tiene solicitudes de amistad pendientes").show();
 
             // Mostrar las solicitudes pendientes
-            PendingRequests.getItems().clear();
-            PendingRequests.getItems().addAll(ClientImpl.getInstance().getPendingRequests());
+            this.pendingRequests.getItems().clear();
+            this.pendingRequests.getItems().addAll(ClientImpl.getInstance().getPendingRequests());
         }
     }
 
@@ -104,8 +90,9 @@ public class MainWindowController {
 
     @FXML
     public void openChat(MouseEvent mouseEvent) {
+        // TODO:
         // Obtener el ítem seleccionado del ListView
-        String selectedItem = Contacts.getSelectionModel().getSelectedItem().getUsername();
+        String selectedItem = contacts.getSelectionModel().getSelectedItem().getUsername();
         System.out.println("Has seleccionado el chat con " + selectedItem);
     }
 
@@ -113,16 +100,16 @@ public class MainWindowController {
 
     @FXML
     public void searchUsers(ActionEvent actionEvent) {
-        if (TxtSearchUsers.getText().isEmpty()) {
+        if (inputSearchUsers.getText().isEmpty()) {
             return;
         }
 
         try {
-            Collection<String> result = ClientImpl.getInstance().searchUsernames(TxtSearchUsers.getText());
-            UsersList.getItems().clear();
+            Collection<String> result = ClientImpl.getInstance().searchUsernames(inputSearchUsers.getText());
+            searchResult.getItems().clear();
             ObservableList<String> items = FXCollections.observableArrayList();
             items.addAll(result);
-            UsersList.setItems(items);
+            searchResult.setItems(items);
 
             // Debug
             System.out.println("Búsqueda de usuarios:");
@@ -139,7 +126,7 @@ public class MainWindowController {
 
     @FXML
     public void sendFriendRequest(ActionEvent actionEvent) {
-        String other = UsersList.getSelectionModel().getSelectedItem();
+        String other = searchResult.getSelectionModel().getSelectedItem();
         try {
             ClientImpl.getInstance().sendFriendRequest(other);
 
@@ -164,12 +151,12 @@ public class MainWindowController {
 
     @FXML
     public void acceptFriendRequest(ActionEvent actionEvent) {
-        String newFriend = PendingRequests.getSelectionModel().getSelectedItem();
+        String newFriend = pendingRequests.getSelectionModel().getSelectedItem();
 
         try {
             ClientImpl.getInstance().acceptFriendRequest(newFriend);
             System.out.println("Has aceptado la solicitud de " + newFriend);
-            PendingRequests.getItems().remove(newFriend);
+            pendingRequests.getItems().remove(newFriend);
 
         } catch (AlreadyExistsException e) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -179,7 +166,7 @@ public class MainWindowController {
             alert.showAndWait();
 
             // Si estaba selecionado es que no se habia borrado de antes
-            PendingRequests.getItems().remove(newFriend);
+            pendingRequests.getItems().remove(newFriend);
         } catch (NotFoundException e) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Usuario desconocido");
@@ -193,18 +180,23 @@ public class MainWindowController {
         }
     }
 
+    @FXML
+    public void rejectFriendRequest(ActionEvent event) {
+        // TODO
+    }
+
     // ==== OTROS ======================================================================================================
 
     @FXML
     public void printRequestSelected(MouseEvent mouseEvent) {
-        String selectedItem = UsersList.getSelectionModel().getSelectedItem();
+        String selectedItem = searchResult.getSelectionModel().getSelectedItem();
         System.out.println("Has seleccionado la solicitud de " + selectedItem);
     }
 
     //Nada, metodo inncecesario por ahora, ignorar
     @FXML
     public void printsSelectedUser(MouseEvent mouseEvent) {
-        String selectedItem = UsersList.getSelectionModel().getSelectedItem();
+        String selectedItem = searchResult.getSelectionModel().getSelectedItem();
         System.out.println("Has seleccionado a " + selectedItem);
     }
 }

@@ -7,7 +7,7 @@
 <HBox xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdis.p2p.client.InicioController">
     <!-- Panel de la izquierda -->
     <StackPane fx:id="leftPane">
-        <Label fx:id="txtAppName" text="Whatsapp 3.0"/>
+        <Label fx:id="txtAppName" text="Cliente P2P"/>
         <ImageView fx:id="imageView"/>
     </StackPane>
 

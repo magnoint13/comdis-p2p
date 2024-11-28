@@ -58,12 +58,22 @@
 }
 
 #btnLogIn, #btnRegister {
-    -fx-background-color: limegreen;
+    -fx-border-radius: 15px;
+    -fx-background-radius: 15px;
+    -fx-pref-height: 30px;
+
+    -fx-font: bold 16px system;
     -fx-text-fill: white;
-    -fx-font: bold 16 system;
+    -fx-background-color: limegreen;
     -fx-cursor: hand;
 }
 
 #btnLogIn:hover, #btnRegister:hover {
     -fx-background-color: green;
+}
+
+#username:focused, #password:focused,
+#btnLogIn:focused, #btnRegister:focused {
+    -fx-border-color: black;
+    -fx-border-width: 3px;
 }

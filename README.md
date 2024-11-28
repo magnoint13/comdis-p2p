@@ -193,3 +193,6 @@ public interface ClientPtp extends Remote {
 # Dudas
 
 - ¿Puede un cliente estar conectado dos veces? ¿Aunque sea en dos dispositivos?
+- ¿Es necesario que el cliente pueda cambiar la URL del servidor?
+- A manda peticiion de amistad a B, B manda peticion de amistad a A. ¿Esta permitido?
+- Si se cambia de chat del amigo A al amigo B, y luego se vuelve a A, ¿se borran los mensajes?

@@ -3,6 +3,7 @@ package org.comdis.p2p.client;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.stage.Screen;
@@ -10,6 +11,8 @@ import javafx.stage.Stage;
 import org.comdis.p2p.exceptions.PtpException;
 import org.comdis.p2p.server.MainServer;
 
+import java.io.IOException;
+import java.net.URL;
 import java.rmi.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -32,18 +35,13 @@ public class ClientApp extends Application {
         ClientImpl client;
         try {
             // Crear el cliente la primera vez
-            // Esta clase sera la encargada de liberarlo cuando el programa termine
+            // Esta clase será la encargada de liberarlo cuando el programa termine
             client = ClientImpl.create();
             // TODO: Obtener URL de la GUI
             client.serverConnect(MainServer.REGISTRY_URL);
 
             // Iniciar la interfaz
-            FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
-            Scene scene = new Scene(fxmlLoader.load(), WINDOW_WIDTH, WINDOW_HEIGHT);
-            scene.getStylesheets().add(getClass().getResource("InicioStyles.css").toExternalForm());
-            stage.setTitle(TITLE);
-            stage.setScene(scene);
-            stage.show();
+            launchInicio(stage);
 
             // Centra la ventana en la pantalla
             // Se debe establecer despues de ejecutar el show
@@ -78,5 +76,46 @@ public class ClientApp extends Application {
             // Y salir con código no exitoso
             System.exit(1);
         }
+    }
+
+    public static void launchInicio(Stage stage) throws IOException {
+        // Cargar la estructura de la nueva escena
+        FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
+
+        // Crear la nueva escena
+        Scene scene = new Scene(fxmlLoader.load(), WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        // Añadir los estilos a la escena
+        URL css = ClientApp.class.getResource("InicioStyles.css");
+        if (css != null) {
+            scene.getStylesheets().add(css.toExternalForm());
+        } else {
+            System.err.println("[ERROR] No se pudo cargar el archivo \"InicioStyles.css\"");
+        }
+
+        // Configurar el título
+        stage.setTitle(TITLE);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public static void launchMainWindow(Stage stage) throws IOException {
+        // Cargar el FXML para la nueva ventana
+        FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("MainWindow.fxml"));
+
+        // Crear una nueva escena con el FXML cargado
+        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+
+        // Añadir los estilos a la escena
+        URL css = ClientApp.class.getResource("MainStyles.css");
+        if (css != null) {
+            scene.getStylesheets().add(css.toExternalForm());
+        } else {
+            System.err.println("[ERROR] No se pudo cargar el archivo \"MainStyles.css\"");
+        }
+
+        // Cambiar la escena
+        stage.setScene(scene);
+        stage.show();
     }
 }

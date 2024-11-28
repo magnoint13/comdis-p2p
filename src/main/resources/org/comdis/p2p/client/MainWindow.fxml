@@ -2,105 +2,58 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import org.comdis.p2p.client.ChatView?>
 
-<TabPane xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdis.p2p.client.MainWindowController">
-    <tabs>
-        <!-- Primera pestaña -->
-        <Tab text="Chats">
-            <content>
-                <SplitPane dividerPositions="0.31450534759358284" prefHeight="400.0" prefWidth="600.0">
-                    <items>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                            <children>
-                        <ScrollPane hbarPolicy="NEVER" prefHeight="400.0" prefWidth="200.0" vbarPolicy="ALWAYS">
-                          <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="402.0" prefWidth="200.0">
-                                 <children>
-                                                  <TextField prefHeight="29.0" prefWidth="186.0" text="Buscar">
-                                                      <font>
-                                                          <Font name="System Italic" size="13.0" />
-                                                      </font>
-                                                  </TextField>
-                                                  <ListView fx:id="Contacts" layoutY="29.0" onMouseClicked="#openChat" prefHeight="371.0" prefWidth="190.0" style="-fx-background-color: limegreen;" />
-                                 </children>
-                              </AnchorPane>
-                          </content>
-                        </ScrollPane>
-                            </children>
-                        </AnchorPane>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                            <children>
-                                <BorderPane fx:id="BorderPane" layoutX="1.0" prefHeight="398.0" prefWidth="446.0" visible="false">
-                                    <top>
-                                        <HBox fx:id="ChatInfo" prefHeight="60.0" prefWidth="446.0" BorderPane.alignment="CENTER" />
-                                    </top>
-                                    <bottom>
-                                        <Pane prefHeight="46.0" prefWidth="459.0" style="-fx-background-color: lightcyan;">
-                                            <children>
-                                                <TextArea fx:id="TxtMensaje" layoutX="-8.0" layoutY="-5.0" prefHeight="51.0" prefWidth="382.0" style="-fx-background-color: white;" />
-                                                <Button fx:id="BtnSend" layoutX="374.0" layoutY="-5.0" mnemonicParsing="false" onAction="#sendMessage" prefHeight="52.0" prefWidth="73.0" style="-fx-background-color: limegreen;" text="Enviar" textFill="WHITE">
-                                                    <font>
-                                                        <Font name="System Bold" size="16.0" />
-                                                    </font>
-                                                </Button>
-                                            </children>
-                                        </Pane>
-                                    </bottom>
-                                    <center>
-                                        <ScrollPane fx:id="ChatPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                                            <content>
-                                                <VBox fx:id="Chat" prefHeight="200.0" prefWidth="100.0" />
-                                            </content>
-                                        </ScrollPane>
-                                    </center>
-                                </BorderPane>
-                                <Label layoutX="100.0" layoutY="137.0" prefHeight="123.0" prefWidth="248.0" text="Abra un chat" textAlignment="CENTER">
-                                    <font>
-                                        <Font name="System Bold" size="40.0" />
-                                    </font>
-                                </Label>
-                            </children>
-                        </AnchorPane>
-                    </items>
-                </SplitPane>
-            </content>
-        </Tab>
+<TabPane
+        tabDragPolicy="FIXED"
+        tabClosingPolicy="UNAVAILABLE"
+        xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="org.comdis.p2p.client.MainWindowController">
 
-        <!-- Otra pestaña de ejemplo -->
-        <Tab text="Añadir amigos">
-            <content>
-                <AnchorPane>
-               <ScrollPane hbarPolicy="NEVER" layoutY="31.0" prefHeight="371.0" prefWidth="600.0" vbarPolicy="ALWAYS">
-                 <content>
-                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="369.0" prefWidth="600.0">
-                        <children>
-                           <ListView fx:id="UsersList" onMouseClicked="#printsSelectedUser" prefHeight="371.0" prefWidth="587.0" />
-                        </children>
-                     </AnchorPane>
-                 </content>
-               </ScrollPane>
-               <TextField fx:id="TxtSearchUsers" layoutX="-2.0" layoutY="-2.0" prefHeight="34.0" prefWidth="440.0" promptText="Buscar usuarios" />
-               <Button fx:id="BtnSearchUsers" layoutX="517.0" layoutY="-4.0" mnemonicParsing="false" onAction="#searchUsers" prefHeight="36.0" prefWidth="83.0" text="Buscar" />
-               <Button fx:id="BtnAddFriend" layoutX="438.0" layoutY="-4.0" mnemonicParsing="false" onAction="#sendFriendRequest" prefHeight="36.0" prefWidth="83.0" text="Agregar" />
-                </AnchorPane>
-            </content>
-        </Tab>
-        <Tab text="Solicitudes">
-            <content>
-                <AnchorPane>
-                    <ScrollPane hbarPolicy="NEVER" layoutY="31.0" prefHeight="371.0" prefWidth="600.0" vbarPolicy="ALWAYS">
-                        <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="369.0" prefWidth="600.0">
-                                <children>
-                                    <ListView fx:id="PendingRequests" onMouseClicked="#printRequestSelected" prefHeight="371.0" prefWidth="587.0" />
-                                </children>
-                            </AnchorPane>
-                        </content>
-                    </ScrollPane>
-               <Button fx:id="BtnAccept" layoutX="508.0" layoutY="-2.0" mnemonicParsing="false" onAction="#acceptFriendRequest" prefHeight="31.0" prefWidth="91.0" text="Aceptar" />
-                </AnchorPane>
-            </content>
-        </Tab>
-    </tabs>
+    <!-- =========================================================================================================== -->
+
+    <Tab text="Chats">
+        <SplitPane>
+
+            <ListView fx:id="contacts"/>
+
+            <VBox fx:id="emptyChatPane" styleClass="background-panel">
+                <Label fx:id="lblTip" text="Seleccione un contacto"/>
+            </VBox>
+
+            <VBox fx:id="chatPane" styleClass="background-panel">
+                <ChatView fx:id="chat" VBox.vgrow="ALWAYS" styleClass="background-panel"/>
+                <HBox styleClass="toolbar">
+                    <TextField fx:id="inputMsg" HBox.hgrow="ALWAYS" promptText="Escribe un mensaje"/>
+                    <Button onAction="#sendMessage" text="Enviar"/>
+                </HBox>
+            </VBox>
+
+        </SplitPane>
+    </Tab>
+
+    <!-- =========================================================================================================== -->
+
+    <Tab text="Añadir amigos">
+        <VBox styleClass="background-panel">
+            <HBox styleClass="toolbar">
+                <TextField fx:id="inputSearchUsers" HBox.hgrow="ALWAYS" promptText="Buscar usuarios"/>
+                <Button mnemonicParsing="false" onAction="#searchUsers" text="Buscar"/>
+                <Button mnemonicParsing="false" onAction="#sendFriendRequest" text="Agregar"/>
+            </HBox>
+            <ListView fx:id="searchResult" onMouseClicked="#printsSelectedUser" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </Tab>
+
+    <!-- =========================================================================================================== -->
+
+    <Tab text="Solicitudes">
+        <VBox styleClass="background-panel">
+            <ListView fx:id="pendingRequests" VBox.vgrow="ALWAYS"/>
+            <HBox styleClass="toolbar">
+                <Button mnemonicParsing="false" onAction="#acceptFriendRequest" text="Aceptar"/>
+                <Button mnemonicParsing="false" onAction="#rejectFriendRequest" text="Rechazar"/>
+            </HBox>
+        </VBox>
+    </Tab>
 </TabPane>
