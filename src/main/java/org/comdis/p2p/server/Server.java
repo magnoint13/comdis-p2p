@@ -7,6 +7,7 @@ import org.comdis.p2p.ServerInterface;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
+import org.comdis.p2p.exceptions.PetitionFromOtherExistsException;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -149,36 +150,46 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     // ==== PETICIONES DE AMISTAD ======================================================================================
 
     @Override
-    public void sendFriendRequest(RemoteClient from, String to) throws NotFoundException, AlreadyExistsException, RemoteException {
+    public void sendFriendRequest(RemoteClient from, String to) throws NotFoundException, AlreadyExistsException, RemoteException,PetitionFromOtherExistsException {
         // Almacenar la peticion en la BD para que constancia de ello
-        database.sendFriendRequest(from.getUsername(), to);
+        if(database.PendindFromOtherExists(to,from.getUsername())){
+            throw new PetitionFromOtherExistsException("Ya existe una solictud pendiente del usuario " + to + ", por ende se acepta esa solicitud autpmáticamente");
+        }else{
+            database.sendFriendRequest(from.getUsername(), to);
 
-        // Si el receptor esta online, ya se le notifica
-        Client receiver = connectedClients.get(to);
-        if (receiver != null) {
-            receiver.newFriendRequest(from.getUsername());
+            // Si el receptor esta online, ya se le notifica
+            Client receiver = connectedClients.get(to);
+            if (receiver != null) {
+                receiver.newFriendRequest(from.getUsername());
+            }
         }
+
     }
 
     @Override
     public void acceptFriendRequest(RemoteClient accepts, String originalSender) throws NotFoundException, RemoteException, AlreadyExistsException {
-        database.acceptFriendRequest(accepts.getUsername(), originalSender);
-        // TODO: notificar a originalSender que se ha aceptado
+            database.acceptFriendRequest(accepts.getUsername(), originalSender);
+            // TODO: notificar a originalSender que se ha aceptado
 
-        // Si los usuarios están conectados, entonces se les notifica que están online
-        // De esta forma, podran empezar a mandarse mensajes
-        Client clientA = connectedClients.get(accepts.getUsername());
-        Client clientB = connectedClients.get(originalSender);
+            // Si los usuarios están conectados, entonces se les notifica que están online
+            // De esta forma, podran empezar a mandarse mensajes
+            Client clientA = connectedClients.get(accepts.getUsername());
+            Client clientB = connectedClients.get(originalSender);
 
-        if (clientA != null && clientB != null) {
-            clientA.friendConnected(clientB.getHandle());
-            clientB.friendConnected(clientA.getHandle());
-        }
+            if (clientA != null && clientB != null) {
+                clientA.friendConnected(clientB.getHandle());
+                clientB.friendConnected(clientA.getHandle());
+            }
     }
 
     @Override
     public void cancelFriendRequest(RemoteClient cancels, String other) throws NotFoundException, RemoteException {
         database.cancelFriendRequest(cancels.getUsername(), other);
         // TODO: solo notificar a originalSender si no es el quien la cancela
+    }
+
+    @Override
+    public void changePassword(String username, String oldpassword, String newpassword) throws AuthException {
+        database.changePassword(username,oldpassword,newpassword);
     }
 }

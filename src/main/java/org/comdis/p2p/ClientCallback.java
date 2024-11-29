@@ -1,5 +1,7 @@
 package org.comdis.p2p;
 
+import org.comdis.p2p.exceptions.AuthException;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -43,4 +45,5 @@ public interface ClientCallback extends Remote {
     void newFriendRequest(String username) throws RemoteException;
 
     // TODO: notificaciones de que una solicitud enviada se ha aceptado o rechazado
+    void changePassword(String username, String oldpassword, String newpasword) throws AuthException;
 }

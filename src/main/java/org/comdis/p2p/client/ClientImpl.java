@@ -4,10 +4,7 @@ import org.comdis.p2p.ClientCallback;
 import org.comdis.p2p.ClientPtp;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.ServerInterface;
-import org.comdis.p2p.exceptions.AlreadyExistsException;
-import org.comdis.p2p.exceptions.AuthException;
-import org.comdis.p2p.exceptions.NotFoundException;
-import org.comdis.p2p.exceptions.PtpException;
+import org.comdis.p2p.exceptions.*;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -31,12 +28,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     // ==== SINGLETON ==================================================================================================
 
     private static ClientImpl instance;
-    private final transient ConcurrentHashMap<String, RemoteClient> friendsOnline;
-    private transient ServerInterface server;
 
-    // ==== CONSTRUCTOR ================================================================================================
-    private transient RemoteClient handle;
-    private transient Collection<String> usersPendingRequests;
     private ClientImpl() throws RemoteException {
         super();
         friendsOnline = new ConcurrentHashMap<>();
@@ -52,6 +44,42 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
 
     public static ClientImpl getInstance() {
         return instance;
+    }
+
+    // ==== ATRIBUTOS ==================================================================================================
+
+    private final transient ConcurrentHashMap<String, RemoteClient> friendsOnline;
+    private transient Collection<String> usersPendingRequests;
+
+    // Objetos remotos
+    private transient RemoteClient handle;
+    private transient ServerInterface server;
+
+    // Para poder actualizar cambios en la GUI
+    private transient MainWindowController mainWindowController;
+
+    // ==== SETTERS ====================================================================================================
+
+    public void setMainWindowController(MainWindowController mainWindowController) {
+        this.mainWindowController = mainWindowController;
+    }
+
+    // ==== GETTERS ====================================================================================================
+
+    public Collection<RemoteClient> getFriendsOnline() {
+        return friendsOnline.values();
+    }
+
+    public Collection<String> getPendingRequests() {
+        return usersPendingRequests;
+    }
+
+    public String getUsername() {
+        return handle.getUsername();
+    }
+
+    public boolean isOnline() {
+        return handle != null;
     }
 
     // ==== CONECTAR Y DESCONECTAR =====================================================================================
@@ -87,23 +115,6 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
         }
     }
 
-    // ==== GETTERS ====================================================================================================
-
-    public Collection<RemoteClient> getFriendsOnline() {
-        return friendsOnline.values();
-    }
-
-    public Collection<String> getPendingRequests() {
-        return usersPendingRequests;
-    }
-
-    public String getUsername() {
-        return handle.getUsername();
-    }
-
-    public boolean isOnline() {
-        return handle != null;
-    }
 
     // ==== PETICIONES AL SERVIDOR =====================================================================================
 
@@ -129,7 +140,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
         return server.searchUsernames(handle, username);
     }
 
-    public void sendFriendRequest(String to) throws AlreadyExistsException, NotFoundException, RemoteException {
+    public void sendFriendRequest(String to) throws AlreadyExistsException, NotFoundException, RemoteException , PetitionFromOtherExistsException {
         server.sendFriendRequest(handle, to);
     }
 
@@ -186,12 +197,16 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void friendConnected(RemoteClient friend) throws RemoteException {
         System.out.printf("Amigo online: %s\n", friend.getUsername());
+        mainWindowController.createAlert("INFORMATION","Amigo conectado","Se ha conectado un amigo","Usuario: " + friend.getUsername());
+        mainWindowController.addContact(friend.getUsername());
         friendsOnline.put(friend.getUsername(), friend);
     }
 
     @Override
     public void friendDisconnected(RemoteClient friend) throws RemoteException {
         System.out.printf("Amigo offline: %s\n", friend.getUsername());
+        mainWindowController.createAlert("INFORMATION","Amigo desconectado","Se ha desconectado un amigo","Usuario: " + friend.getUsername());
+        mainWindowController.removeContact(friend.getUsername());
         friendsOnline.remove(friend.getUsername());
     }
 
@@ -200,7 +215,6 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void friendRequests(Collection<String> requests) throws RemoteException {
         usersPendingRequests = requests;
-
         System.out.println("Peticiones de amistad: ");
         for (String username : requests) {
             System.out.println('\t' + username);
@@ -210,6 +224,15 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void newFriendRequest(String username) throws RemoteException {
         System.out.printf("Nueva peticion de amistad: %s\n", username);
+        mainWindowController.createAlert("INFORMATION","Nueva solicitud amistad","Ha recibido una solicitud de amistad nueva","Usuario: " + username);
+        mainWindowController.addContact(username);
         usersPendingRequests.add(username);
+    }
+
+    // ==== AJUSTES ====================================================================================================
+
+    @Override
+    public void changePassword(String username,String oldpassword, String newpasword) throws AuthException{
+        server.changePassword(username,oldpassword,newpasword);
     }
 }

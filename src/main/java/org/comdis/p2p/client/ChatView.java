@@ -12,21 +12,21 @@ import javafx.scene.layout.VBox;
 public class ChatView extends ScrollPane {
     private final static int MAX_MESSAGES = 100;
 
+    private final String username;
     private final ObservableList<Node> msgNodes;
 
-    public ChatView() {
-        VBox content = new VBox();
-        msgNodes = content.getChildren();
+    public ChatView(String username) {
+        this.username = username;
 
-        // TODO: hacer que sea customizable desde fuera
+        VBox content = new VBox();
         content.setPrefWidth(300);
         content.setSpacing(10);
         content.setAlignment(Pos.BOTTOM_CENTER);
         content.setStyle("-fx-background-color: white;");
         content.setPadding(new Insets(20, 10, 20, 10));
+        msgNodes = content.getChildren();
 
         setContent(content);
-        runTest();
     }
 
     public void addReceivedMsg(String msg) {
@@ -47,9 +47,6 @@ public class ChatView extends ScrollPane {
     }
 
     private HBox createText(String text, boolean right) {
-        // TODO: hacer que sea customizable desde fuera.
-        // TODO: no es posible hacer el texto sea seleccionable de forma sencilla.
-        //       ChatGPT dice de usar un TextField con editable=false y focusTraversable=false.
         Label label = new Label(text);
         label.setWrapText(true);
         label.setMinWidth(200);
@@ -62,15 +59,5 @@ public class ChatView extends ScrollPane {
         pane.setAlignment(right ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
         return pane;
-    }
-
-    // TODO: debug only
-    private void runTest() {
-        for (int i = 0; i < 400; i++) {
-            addMsg(
-                    i + ") Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                    Math.random() > 0.5
-            );
-        }
     }
 }

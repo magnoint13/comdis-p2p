@@ -1,6 +1,7 @@
 package org.comdis.p2p.server;
 
 import org.comdis.p2p.FriendStatus;
+import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
@@ -160,6 +161,47 @@ class DataBaseController implements AutoCloseable {
                 """)
         ) {
             pst.setString(1, username);
+
+            try (ResultSet rs = pst.executeQuery()) {
+                return rs.next() && rs.getInt("count") == 1;
+            }
+
+        } catch (SQLException error) {
+            PtpException.logError(error);
+            return false;
+        }
+    }
+
+    public boolean userExists(String username,String clave) {
+        try (PreparedStatement pst = connection.prepareStatement("""
+                select count(*) as count
+                from Usuarios
+                where nombreUsuario = ? and clave = ?;
+                """)
+        ) {
+            pst.setString(1, username);
+            pst.setString(2, clave);
+
+
+            try (ResultSet rs = pst.executeQuery()) {
+                return rs.next() && rs.getInt("count") == 1;
+            }
+
+        } catch (SQLException error) {
+            PtpException.logError(error);
+            return false;
+        }
+    }
+
+    public boolean PendindFromOtherExists(String from, String to) {
+        try (PreparedStatement pst = connection.prepareStatement("""
+                select count(*) as count
+                from Solicitudes
+                where nombreUsuario1 = ? and nombreUsuario2 = ? ;
+                """)
+        ) {
+            pst.setString(1, from);
+            pst.setString(2,to);
 
             try (ResultSet rs = pst.executeQuery()) {
                 return rs.next() && rs.getInt("count") == 1;
@@ -405,6 +447,26 @@ class DataBaseController implements AutoCloseable {
 
     // TODO: eliminar amigo
 
+    // ==== AJUSTES ================================================================================================
+
+    public void changePassword(String username, String oldpassword, String newpassword) throws AuthException {
+        if (!userExists(username,oldpassword)) {
+            throw new AuthException("Ha ocurrido un error al intentar cambiar la clave.La contraseña es incorrecta");
+        }
+        try (PreparedStatement pst = connection.prepareStatement("""
+                update Usuarios
+                set clave = ?
+                where nombreUsuario = ?;
+                """)
+        ) {
+            pst.setString(1, newpassword);
+            pst.setString(2, username);
+            pst.executeUpdate();
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+    }
+
     // ==== COMODIDADES ================================================================================================
 
     @Override
@@ -445,4 +507,7 @@ class DataBaseController implements AutoCloseable {
     private int calculateFriendColumn(String toInsert, String compare) {
         return toInsert.compareToIgnoreCase(compare) > 0 ? 1 : 2;
     }
+
+
+
 }

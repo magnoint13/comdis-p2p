@@ -118,6 +118,29 @@
     -fx-background-color: green;
 }
 
+.title {
+    -fx-font: bold 20 system;
+}
+
+#lblChatName {
+    -fx-font: bold 16 system;
+}
+
+.error {
+    -fx-text-fill: red;
+    -fx-font: bold 14 system;
+}
+
+#changePasswordForm {
+    -fx-alignment: center;
+    -fx-padding: 25px;
+    -fx-vgap: 5px;
+    -fx-hgap: 5px;
+
+    -fx-min-width: 500px;
+    -fx-max-width: 600px;
+}
+
 /* ================================================= */
 
 .list-view {

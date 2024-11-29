@@ -193,6 +193,10 @@ public interface ClientPtp extends Remote {
 # Dudas
 
 - ¿Puede un cliente estar conectado dos veces? ¿Aunque sea en dos dispositivos?
+  - Es un _edge case_, hay distintas formas de arreglarlo. Lo mejor es dar un error.
 - ¿Es necesario que el cliente pueda cambiar la URL del servidor?
+  - No
 - A manda peticiion de amistad a B, B manda peticion de amistad a A. ¿Esta permitido?
+  - Es un _edge case_, varias implementaciones.
 - Si se cambia de chat del amigo A al amigo B, y luego se vuelve a A, ¿se borran los mensajes?
+  - No

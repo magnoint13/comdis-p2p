@@ -3,6 +3,7 @@ package org.comdis.p2p;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
+import org.comdis.p2p.exceptions.PetitionFromOtherExistsException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -52,7 +53,7 @@ public interface ServerInterface extends Remote {
      * @throws AlreadyExistsException Si `from` y `to` ya son amigos o si la solitud ya existe.
      */
     void sendFriendRequest(RemoteClient from, String to)
-            throws NotFoundException, AlreadyExistsException, RemoteException;
+            throws NotFoundException, AlreadyExistsException, RemoteException, PetitionFromOtherExistsException;
 
     /**
      * `accepts` acepta la peticion enviada por `originalSender`.
@@ -93,4 +94,6 @@ public interface ServerInterface extends Remote {
     // TODO: posibilidad para verificar la identidad de un usuario:
     //       El server comprueba si esta online y si contraseña es correcta
     //       Supuestamente, equals de dos objetos remotos tambien funcionaria
+
+    void changePassword(String username, String oldpassword,String newpassword) throws  AuthException;
 }

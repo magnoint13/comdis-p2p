@@ -18,11 +18,11 @@ create table if not exists Amigos (
 );
 
 create table if not exists Solicitudes (
-    --fechaSolicitud timestamp not null default current_timestamp,
+    fechaSolicitud timestamp not null default current_timestamp,
     emisor text not null,
     receptor text not null,
     estado text not null default 'pendiente',
-    primary key (emisor, receptor),
+    primary key (emisor, receptor,fechaSolicitud),
     --primary key (fechaSolicitud, emisor, receptor),
     foreign key (emisor) references Usuarios(nombreUsuario)
         on delete cascade

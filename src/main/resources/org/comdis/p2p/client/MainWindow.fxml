@@ -18,16 +18,21 @@
             <ListView fx:id="contacts"/>
 
             <StackPane>
-                <VBox fx:id="emptyChatPane" styleClass="background-panel">
-                    <Label fx:id="lblTip" text="Seleccione un contacto"/>
-                </VBox>
-
                 <VBox fx:id="chatPane" styleClass="background-panel">
-                    <ChatView fx:id="chat" VBox.vgrow="ALWAYS" styleClass="background-panel"/>
+                    <!-- Este contenido se cambiara una vez que se seleccione un chat -->
+                    <Label fx:id="lblTip" text="Seleccione un contacto"/>
+
+                    <!--
+                    <Label fx:id="lblChatName" text="Jimmy"/>
+                    <StackPane fx:id="chat">
+                        <ChatView fx:id="chat" VBox.vgrow="ALWAYS" styleClass="background-panel"/>
+                        ...
+                    </StackPane>
                     <HBox styleClass="toolbar">
                         <TextField fx:id="inputMsg" HBox.hgrow="ALWAYS" promptText="Escribe un mensaje"/>
                         <Button onAction="#sendMessage" text="Enviar"/>
                     </HBox>
+                    -->
                 </VBox>
             </StackPane>
         </SplitPane>
@@ -55,6 +60,26 @@
                 <Button mnemonicParsing="false" onAction="#acceptFriendRequest" text="Aceptar"/>
                 <Button mnemonicParsing="false" onAction="#rejectFriendRequest" text="Rechazar"/>
             </HBox>
+        </VBox>
+    </Tab>
+
+    <!-- =========================================================================================================== -->
+
+    <Tab text="Ajustes">
+        <VBox styleClass="background-panel">
+            <Label text="Ajustes" styleClass="title"/>
+            <GridPane fx:id="changePasswordForm">
+                <Label GridPane.rowIndex="1" GridPane.columnIndex="1" text="Contraseña antigua:"/>
+                <PasswordField GridPane.rowIndex="1" GridPane.columnIndex="2" fx:id="inputOldPassword"/>
+
+                <Label GridPane.rowIndex="2" GridPane.columnIndex="1" text="Contraseña nueva:"/>
+                <PasswordField GridPane.rowIndex="2" GridPane.columnIndex="2" fx:id="inputNewPassword1"/>
+
+                <Label GridPane.rowIndex="3" GridPane.columnIndex="1" text="Repetir contraseña nueva:"/>
+                <PasswordField GridPane.rowIndex="3" GridPane.columnIndex="2" fx:id="inputNewPassword2"/>
+            </GridPane>
+            <Label visible="false" styleClass="error" visible="false" fx:id="inputFailed"/>
+            <Button text="Cambiar" styleClass="btn" onAction="#changePassword"/>
         </VBox>
     </Tab>
 </TabPane>

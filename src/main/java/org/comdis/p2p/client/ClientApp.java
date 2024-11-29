@@ -22,8 +22,11 @@ import java.rmi.RemoteException;
  */
 public class ClientApp extends Application {
     private static final String TITLE = "Programa de comunicación P2P!";
-    private static final int WINDOW_WIDTH = 650;
-    private static final int WINDOW_HEIGHT = 400;
+    private static final int INIT_WINDOW_WIDTH = 650;
+    private static final int INIT_WINDOW_HEIGHT = 400;
+
+    private static final int MAIN_WINDOW_WIDTH = 800;
+    private static final int MAIN_WINDOW_HEIGHT = 600;
 
     public static void main(String[] args) {
         launch();
@@ -83,7 +86,7 @@ public class ClientApp extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("Inicio.fxml"));
 
         // Crear la nueva escena
-        Scene scene = new Scene(fxmlLoader.load(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        Scene scene = new Scene(fxmlLoader.load(), INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT);
 
         // Añadir los estilos a la escena
         URL css = ClientApp.class.getResource("InicioStyles.css");
@@ -104,7 +107,7 @@ public class ClientApp extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(ClientApp.class.getResource("MainWindow.fxml"));
 
         // Crear una nueva escena con el FXML cargado
-        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+        Scene scene = new Scene(fxmlLoader.load(), MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
 
         // Añadir los estilos a la escena
         URL css = ClientApp.class.getResource("MainStyles.css");
