@@ -95,5 +95,5 @@ public interface ServerInterface extends Remote {
     //       El server comprueba si esta online y si contraseña es correcta
     //       Supuestamente, equals de dos objetos remotos tambien funcionaria
 
-    void changePassword(String username, String oldpassword,String newpassword) throws  AuthException;
+    void changePassword(String username, String oldpassword,String newpassword) throws  AuthException, RemoteException;
 }

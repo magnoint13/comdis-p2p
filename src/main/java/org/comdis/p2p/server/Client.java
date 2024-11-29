@@ -3,6 +3,7 @@ package org.comdis.p2p.server;
 import org.comdis.p2p.ClientCallback;
 import org.comdis.p2p.ClientPtp;
 import org.comdis.p2p.RemoteClient;
+import org.comdis.p2p.exceptions.AuthException;
 
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -71,6 +72,11 @@ class Client implements ClientCallback {
         callbacks.newFriendRequest(username);
     }
 
+    @Override
+    public void changePassword(String username, String oldpassword, String newpasword) throws AuthException , RemoteException{
+        callbacks.changePassword(username, oldpassword, newpasword);
+    }
+
     // ==== COMODIDADES ================================================================================================
 
     @Override
@@ -100,4 +106,5 @@ class Client implements ClientCallback {
     public int hashCode() {
         return Objects.hashCode(handle.getUsername());
     }
+
 }

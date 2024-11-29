@@ -153,7 +153,7 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     public void sendFriendRequest(RemoteClient from, String to) throws NotFoundException, AlreadyExistsException, RemoteException,PetitionFromOtherExistsException {
         // Almacenar la peticion en la BD para que constancia de ello
         if(database.PendindFromOtherExists(to,from.getUsername())){
-            throw new PetitionFromOtherExistsException("Ya existe una solictud pendiente del usuario " + to + ", por ende se acepta esa solicitud autpmáticamente");
+            throw new PetitionFromOtherExistsException("Ya existe una solictud pendiente del usuario " + to + ", por ende se acepta esa solicitud automáticamente");
         }else{
             database.sendFriendRequest(from.getUsername(), to);
 
@@ -189,7 +189,7 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     }
 
     @Override
-    public void changePassword(String username, String oldpassword, String newpassword) throws AuthException {
+    public void changePassword(String username, String oldpassword, String newpassword) throws AuthException, RemoteException {
         database.changePassword(username,oldpassword,newpassword);
     }
 }

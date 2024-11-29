@@ -60,4 +60,8 @@ public class ChatView extends ScrollPane {
 
         return pane;
     }
+
+    public boolean fromUser(String username) {
+        return this.username.equals(username);
+    }
 }

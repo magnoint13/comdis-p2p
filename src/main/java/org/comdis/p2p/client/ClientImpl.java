@@ -154,8 +154,8 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
 
     // ==== ENVIAR MENSAJE =============================================================================================
 
-    public void sendMessage(RemoteClient friendHandle, String msg) throws RemoteException {
-        friendHandle.sendMessage(handle, msg);
+    public void sendMessage(RemoteClient friendHandle,RemoteClient sender, String msg) throws RemoteException {
+        friendHandle.sendMessage(sender, msg);
     }
 
     public void sendMessage(String friend, String msg) throws RemoteException, NotFoundException {
@@ -167,7 +167,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
             throw new NotFoundException("El usuario \"%s\" no esta online".formatted(friend));
         }
 
-        sendMessage(friendHandle, msg);
+        sendMessage(friendHandle,handle, msg);
     }
 
     // =================================================================================================================
@@ -225,14 +225,14 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     public void newFriendRequest(String username) throws RemoteException {
         System.out.printf("Nueva peticion de amistad: %s\n", username);
         mainWindowController.createAlert("INFORMATION","Nueva solicitud amistad","Ha recibido una solicitud de amistad nueva","Usuario: " + username);
-        mainWindowController.addContact(username);
+        mainWindowController.addPendingRequest(username);
         usersPendingRequests.add(username);
     }
 
     // ==== AJUSTES ====================================================================================================
 
     @Override
-    public void changePassword(String username,String oldpassword, String newpasword) throws AuthException{
+    public void changePassword(String username,String oldpassword, String newpasword) throws AuthException, RemoteException{
         server.changePassword(username,oldpassword,newpasword);
     }
 }

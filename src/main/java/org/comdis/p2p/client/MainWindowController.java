@@ -95,6 +95,18 @@ public class MainWindowController {
         });
     }
 
+    public void addPendingRequest(String username) {
+        Platform.runLater(() -> {
+            pendingRequests.getItems().add(username);
+        });
+    }
+
+    public void removePendingRequest(String username) {
+        Platform.runLater(() -> {
+            pendingRequests.getItems().remove(username);
+        });
+    }
+
 
     // ==== CHATS ======================================================================================================
 
@@ -135,7 +147,7 @@ public class MainWindowController {
             });
             hbox.getChildren().add(btnSend);
         } else {
-            ChatView selected;
+            ChatView selected = null;
             for (Node n : chatLists) {
                 if (n instanceof ChatView chatView && chatView.fromUser(selectedItem)) {
                     // TODO: mostrar el chatview en el stackpane
@@ -146,7 +158,8 @@ public class MainWindowController {
             if (selected == null) {
                 chatLists.add(new ChatView(selectedItem));
             } else {
-                
+                chatPane.getChildren().remove(selected);
+                chatPane.getChildren().add(selected);
             }
         }
     }
@@ -201,6 +214,7 @@ public class MainWindowController {
         try {
             ClientImpl.getInstance().acceptFriendRequest(newFriend);
             System.out.println("Has aceptado la solicitud de " + newFriend);
+            pendingRequests.getItems().remove(newFriend);
         } catch (AlreadyExistsException e) {
             createAlert("INFORMATION","Ya existe","Ya existe","Tu amistad con \"%s\" ya ha sido establecida".formatted(newFriend));
             // Si estaba selecionado es que no se habia borrado de antes
@@ -211,8 +225,7 @@ public class MainWindowController {
             // TODO: alert?
             PtpException.logError(e);
         }
-        pendingRequests.getItems().remove(newFriend);
-        contacts.getItems().add(newFriend);
+
     }
 
 
@@ -230,7 +243,7 @@ public class MainWindowController {
         } catch (RemoteException e) {
             PtpException.logError(e);
         }catch (NotFoundException e){
-            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(other));
+            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(rejected));
         }
     }
 
@@ -242,12 +255,20 @@ public class MainWindowController {
             inputFailed.setVisible(true);
             inputFailed.setText("Debe rellenar todos los campos");
         }else{
+            inputFailed.setVisible(false);
             if(inputNewPassword1.getText().equals(inputNewPassword2.getText())){
                 try {
                     ClientImpl.getInstance().changePassword(ClientImpl.getInstance().getUsername(),inputOldPassword.getText(),inputNewPassword1.getText());
+                    createAlert("INFORMATION","Operación exitosa","Contraseña actualizada correctamente","");
                 }catch (AuthException e){
                     createAlert("ERROR","Credenciales inválidas",e.getMessage(),"Revise por favor si la contraseña es correcta");
+                }catch (RemoteException e) {
+                    PtpException.logError(e);
                 }
+
+            }else{
+                inputFailed.setVisible(true);
+                inputFailed.setText("Las contraseñas introducidas no coinciden");
             }
         }
     }

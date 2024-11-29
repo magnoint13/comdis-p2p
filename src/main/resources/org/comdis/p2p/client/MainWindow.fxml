@@ -15,7 +15,7 @@
     <Tab text="Chats">
         <SplitPane fx:id="splitPane">
 
-            <ListView fx:id="contacts"/>
+            <ListView fx:id="contacts" onMouseClicked="#openChat"/>
 
             <StackPane>
                 <VBox fx:id="chatPane" styleClass="background-panel">
@@ -78,7 +78,7 @@
                 <Label GridPane.rowIndex="3" GridPane.columnIndex="1" text="Repetir contraseña nueva:"/>
                 <PasswordField GridPane.rowIndex="3" GridPane.columnIndex="2" fx:id="inputNewPassword2"/>
             </GridPane>
-            <Label visible="false" styleClass="error" visible="false" fx:id="inputFailed"/>
+            <Label styleClass="error" visible="false" fx:id="inputFailed"/>
             <Button text="Cambiar" styleClass="btn" onAction="#changePassword"/>
         </VBox>
     </Tab>

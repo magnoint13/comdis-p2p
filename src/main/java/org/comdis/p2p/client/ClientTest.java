@@ -4,6 +4,7 @@ import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.NotFoundException;
+import org.comdis.p2p.exceptions.PetitionFromOtherExistsException;
 import org.comdis.p2p.server.MainServer;
 
 import java.net.MalformedURLException;
@@ -99,7 +100,7 @@ class ClientTest {
                     try {
                         String username = askString("Usuario: ");
                         client.sendFriendRequest(username);
-                    } catch (AlreadyExistsException | NotFoundException e) {
+                    } catch (AlreadyExistsException | NotFoundException  | PetitionFromOtherExistsException e) {
                         System.out.println("ERROR: " + e.getMessage());
                     }
                 }

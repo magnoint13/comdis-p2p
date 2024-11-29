@@ -197,11 +197,12 @@ class DataBaseController implements AutoCloseable {
         try (PreparedStatement pst = connection.prepareStatement("""
                 select count(*) as count
                 from Solicitudes
-                where nombreUsuario1 = ? and nombreUsuario2 = ? ;
+                where emisor = ? and receptor = ? and estado = ?;
                 """)
         ) {
             pst.setString(1, from);
             pst.setString(2,to);
+            pst.setString(3,FriendStatus.PENDING.toString());
 
             try (ResultSet rs = pst.executeQuery()) {
                 return rs.next() && rs.getInt("count") == 1;
@@ -446,6 +447,7 @@ class DataBaseController implements AutoCloseable {
     }
 
     // TODO: eliminar amigo
+
 
     // ==== AJUSTES ================================================================================================
 

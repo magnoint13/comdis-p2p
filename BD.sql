@@ -31,6 +31,6 @@ create table if not exists Solicitudes (
         on update cascade
         on delete cascade,
     -- Asegurarse que son los mismos estados que en server.FriendStatus
-    constraint check_estado check (estado in ('pendiente', 'aceptada', 'rechazada'))
-    constraint check_usuarios_diferentes check (emisor != receptor),
+    constraint check_estado check (estado in ('pendiente', 'aceptada', 'rechazada')),
+    constraint check_usuarios_diferentes check (emisor != receptor)
 );
