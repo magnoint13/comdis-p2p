@@ -320,7 +320,7 @@ public class MainWindowController {
                 System.out.println("\t" + r);
             }
         } catch (RemoteException error) {
-            // TODO: alert?
+            createAlert("ERROR","Excepción remota","Ha ocurrido una excepción de RemoteException","");
             PtpException.logError(error);
         }
     }
@@ -338,7 +338,7 @@ public class MainWindowController {
         } catch (NotFoundException e) {
             createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(other));
         } catch (RemoteException e) {
-            // TODO: alert?
+            createAlert("ERROR","Excepción remota","Ha ocurrido una excepción de RemoteException","");
             PtpException.logError(e);
         } catch (PetitionFromOtherExistsException e) {
             createAlert("INFORMATION","Solicitud existente","Existe ya una solicitud de amistad",e.getMessage());
@@ -358,7 +358,7 @@ public class MainWindowController {
         } catch (NotFoundException e) {
             createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(newFriend));
         } catch (RemoteException e) {
-            // TODO: alert?
+            createAlert("ERROR","Excepción remota","Ha ocurrido una excepción de RemoteException","");
             PtpException.logError(e);
         }
 
