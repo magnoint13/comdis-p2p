@@ -15,7 +15,6 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 
-// TODO: https://www.sqlite.org/threadsafe.html
 class DataBaseController implements AutoCloseable {
     private static final int TABLE_COUNT = 3;
 
@@ -193,7 +192,7 @@ class DataBaseController implements AutoCloseable {
         }
     }
 
-    public boolean PendindFromOtherExists(String from, String to) {
+    public boolean pendingFromOtherExists(String from, String to) {
         try (PreparedStatement pst = connection.prepareStatement("""
                 select count(*) as count
                 from Solicitudes
@@ -301,6 +300,26 @@ class DataBaseController implements AutoCloseable {
 
             if (areFriends(from, to)) {
                 throw new AlreadyExistsException("Los usuarios \"%s\" y \"%s\" ya son amigos".formatted(from, to));
+            }
+
+            // Comprobar que no existe otra solicitud en estado pendiente
+            try (PreparedStatement pst = connection.prepareStatement("""
+                    select count(*) as count
+                    from Solicitudes
+                    where emisor = ?
+                      and receptor = ?
+                      and estado = ?; -- pendiente
+                    """)
+            ) {
+                pst.setString(1, from);
+                pst.setString(2, to);
+                pst.setString(3, FriendStatus.PENDING.toString());
+
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (!rs.next() || rs.getInt("count") != 0) {
+                        throw new AlreadyExistsException("Ya existe una peticion de amistad entre \"%s\" y \"%s\"".formatted(from, to));
+                    }
+                }
             }
 
             // Realizar la insercion
@@ -467,7 +486,6 @@ class DataBaseController implements AutoCloseable {
         }
     }
 
-
     // ==== AJUSTES ================================================================================================
 
     public void changePassword(String username, String oldpassword, String newpassword) throws AuthException {
@@ -528,7 +546,4 @@ class DataBaseController implements AutoCloseable {
     private int calculateFriendColumn(String toInsert, String compare) {
         return toInsert.compareToIgnoreCase(compare) > 0 ? 1 : 2;
     }
-
-
-
 }

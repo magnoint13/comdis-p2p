@@ -45,7 +45,8 @@
         <VBox styleClass="background-panel">
             <ListView fx:id="lstFriends" VBox.vgrow="ALWAYS">
                 <placeholder>
-                    <Label text="No tienes amigos.\nBuscalos en la pestaña de Añadir amigos." wrapText="true"/>
+                    <!-- \n no se interpreta, entonces se inserta un caracter especial de XML -->
+                    <Label text="No tienes amigos.&#xD;Buscalos en la pestaña de Añadir amigos." wrapText="true"/>
                 </placeholder>
             </ListView>
             <Button mnemonicParsing="false" onAction="#deleteFriendship" text="Eliminar amigo" />
@@ -102,6 +103,7 @@
             </GridPane>
             <Label fx:id="lblInputFailed" styleClass="error" visible="false" />
             <Button onAction="#changePassword" styleClass="btn" text="Cambiar" />
+            <!-- TODO: boton de borrar cuenta -->
         </VBox>
     </Tab>
 </TabPane>

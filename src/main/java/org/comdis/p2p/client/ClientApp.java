@@ -40,7 +40,6 @@ public class ClientApp extends Application {
             // Crear el cliente la primera vez
             // Esta clase será la encargada de liberarlo cuando el programa termine
             client = ClientImpl.create();
-            // TODO: Obtener URL de la GUI
             client.serverConnect(MainServer.REGISTRY_URL);
 
             // Iniciar la interfaz

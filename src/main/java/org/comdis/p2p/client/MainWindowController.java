@@ -204,6 +204,7 @@ public class MainWindowController {
     @FXML
     public void openChat() {
         chatPane.setVisible(true);
+        inputMsg.setDisable(false);
 
         String selectedUser = lstContacts.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
@@ -277,14 +278,13 @@ public class MainWindowController {
 
     @FXML
     public void sendMessage() {
-        if (inputMsg.getText().isEmpty()) {
+        String msg = inputMsg.getText().trim();
+        if (msg.isEmpty()) {
             return;
         }
 
         try {
-            String msg = inputMsg.getText();
             String receiver = lstContacts.getSelectionModel().getSelectedItem();
-
             if (receiver == null) {
                 return;
             }
@@ -395,7 +395,7 @@ public class MainWindowController {
                     Alert.AlertType.INFORMATION,
                     "Ya existe",
                     "Ya existe",
-                    "Tu amistad con \"%s\" ya ha sido establecida".formatted(newFriend)
+                    e.getMessage()
             );
             // Si estaba selecionado es que no se habia borrado de antes
             pendingRequests.getItems().remove(newFriend);
@@ -406,6 +406,8 @@ public class MainWindowController {
                     "Usuario desconocido",
                     "No se ha encontrado al usuario de ID \"%s\"".formatted(newFriend)
             );
+            // Se borra de la lista, por algun motivo no se habia borrado antes
+            pendingRequests.getItems().remove(newFriend);
         } catch (RemoteException e) {
             PtpException.logError(e);
             createAlert(
@@ -429,6 +431,8 @@ public class MainWindowController {
         String rejected = pendingRequests.getSelectionModel().getSelectedItem();
         try {
             ClientImpl.getInstance().cancelFriendRequest(rejected);
+            System.out.println("Has rechazado la solicitud de " + rejected);
+            pendingRequests.getItems().remove(rejected);
         } catch (RemoteException e) {
             PtpException.logError(e);
             createAlert(
@@ -437,7 +441,7 @@ public class MainWindowController {
                     "Error inesperado",
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
-        }catch (NotFoundException e){
+        } catch (NotFoundException e){
             createAlert(
                     Alert.AlertType.INFORMATION,
                     "Usuario desconocido",
@@ -448,7 +452,7 @@ public class MainWindowController {
     }
 
     @FXML
-    public void getFriends(Event event) {
+    public void getFriends(Event ignoredEvent) {
         try {
             Collection<String> result = ClientImpl.getInstance().getFriends();
             if(result != null) {
@@ -512,7 +516,7 @@ public class MainWindowController {
                 inputNewPassword1.getText().isEmpty()
                 || inputNewPassword2.getText().isEmpty()
                 || inputOldPassword.getText().isEmpty()
-        ){
+        ) {
             lblInputFailed.setVisible(true);
             lblInputFailed.setText("Debe rellenar todos los campos");
             return;

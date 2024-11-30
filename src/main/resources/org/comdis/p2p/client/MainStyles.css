@@ -71,7 +71,7 @@
 }
 
 #lstContacts .list-cell {
-    -fx-background-color: limegreen;
+    -fx-background-color: #32cd32;
 
     -fx-font: bold 14 system;
     -fx-text-fill: white;
@@ -82,7 +82,7 @@
 }
 
 #lstContacts .list-cell:odd {
-    -fx-background-color: blue;
+    -fx-background-color: #35b735;
 }
 
 #lstContacts .list-cell:hover {
@@ -97,6 +97,12 @@
     -fx-alignment: top-center;
     -fx-fill-width: true;
     -fx-background-color: white;
+}
+
+#chatDisplay .scroll-pane {
+    -fx-background-color: white;
+    -fx-border-width: 0;
+    -fx-border-color: transparent;
 }
 
 /* ==== AJUSTES ==================================== */
