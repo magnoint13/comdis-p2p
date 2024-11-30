@@ -189,7 +189,23 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     }
 
     @Override
+    public void deleteFriendship(RemoteClient client, String other) throws NotFoundException, RemoteException {
+        database.deleteFriendship(client,other);
+
+        Client friend = connectedClients.get(other);
+
+        if (friend != null) {
+            friend.friendshipFinished(client);
+        }
+    }
+
+    @Override
     public void changePassword(String username, String oldpassword, String newpassword) throws AuthException, RemoteException {
         database.changePassword(username,oldpassword,newpassword);
+    }
+
+    @Override
+    public Collection<String> getFriends(RemoteClient handle) throws RemoteException, NotFoundException {
+        return database.getFriends(handle.getUsername());
     }
 }

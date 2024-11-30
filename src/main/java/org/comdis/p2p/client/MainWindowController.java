@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -16,12 +17,12 @@ import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.*;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collection;
 
 
 // TODO: notificar al cliente cuando esta online
 public class MainWindowController {
-
 
     // Lista de chats (ChatView) que contienen los mensajes
     private ObservableList<Node> chatLists;
@@ -30,6 +31,7 @@ public class MainWindowController {
     @FXML private ListView<String> pendingRequests;
     @FXML private ListView<String> searchResult;
     @FXML private ListView<String> contacts;
+    @FXML private ListView<String> friendsList;
 
     // Text input
     @FXML private TextField inputMsg;
@@ -64,7 +66,7 @@ public class MainWindowController {
         //Se alarga el stackpane dentro del vBox
         VBox.setVgrow(chatPane, Priority.ALWAYS);
 
-        // Notificar de los amigos ya conectados
+        // Notificar de los amigos ya conectados y guardar lista de amigos
         Collection<RemoteClient> friendsOnline = ClientImpl.getInstance().getFriendsOnline();
         if (!friendsOnline.isEmpty()) {
             StringBuilder builder = new StringBuilder();
@@ -104,7 +106,6 @@ public class MainWindowController {
     public void addContact(String username) {
         Platform.runLater(() -> {
             contacts.getItems().add(username);
-
         });
     }
 
@@ -123,6 +124,18 @@ public class MainWindowController {
     public void removePendingRequest(String username) {
         Platform.runLater(() -> {
             pendingRequests.getItems().remove(username);
+        });
+    }
+
+    public void addFriend(String username) {
+        Platform.runLater(() -> {
+            friendsList.getItems().add(username);
+        });
+    }
+
+    public void removeFriend(String username) {
+        Platform.runLater(() -> {
+            friendsList.getItems().remove(username);
         });
     }
 
@@ -319,6 +332,7 @@ public class MainWindowController {
         String other = searchResult.getSelectionModel().getSelectedItem();
         try {
             ClientImpl.getInstance().sendFriendRequest(other);
+            createAlert("INFORMATION","Solicitud enviada","Solicitud enviada correctamente","");
         } catch (AlreadyExistsException e) {
             createAlert("INFORMATION","Solicitud existente","Ya hay una solicitud pendiente","Espere a la respuesta del otro usuario");
         } catch (NotFoundException e) {
@@ -369,6 +383,41 @@ public class MainWindowController {
         }
     }
 
+    @FXML
+    public void getFriends(Event event) {
+        try {
+            Collection<String> result = ClientImpl.getInstance().getFriends();
+            if(result != null) {
+                if (!result.isEmpty()){
+                    friendsList.getItems().clear();
+                    friendsList.getItems().addAll(ClientImpl.getInstance().getFriends());
+                }
+            }
+        }catch (RemoteException e){
+            PtpException.logError(e);
+        }catch (NotFoundException e){
+            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername()));
+        }
+    }
+
+    @FXML
+    public void deleteFriendship(ActionEvent actionEvent) {
+        String friend = friendsList.getSelectionModel().getSelectedItem();
+        if (friend == null) {
+            return;
+        }
+        try {
+            ClientImpl.getInstance().deleteFriendship(friend);
+            deleteChat(friend);
+            removeFriend(friend);
+            removeContact(friend);
+        }catch (RemoteException e){
+            PtpException.logError(e);
+        }catch (NotFoundException e){
+            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(friend));
+        }
+    }
+
     // ==== AJUSTES ======================================================================================================
 
     @FXML
@@ -403,10 +452,15 @@ public class MainWindowController {
         System.out.println("Has seleccionado la solicitud de " + selectedItem);
     }
 
-    //Nada, metodo inncecesario por ahora, ignorar
     @FXML
     public void printsSelectedUser(MouseEvent mouseEvent) {
         String selectedItem = searchResult.getSelectionModel().getSelectedItem();
+        System.out.println("Has seleccionado a " + selectedItem);
+    }
+
+    @FXML
+    public void printSelectedFriend(MouseEvent mouseEvent) {
+        String selectedItem = friendsList.getSelectionModel().getSelectedItem();
         System.out.println("Has seleccionado a " + selectedItem);
     }
 
@@ -421,5 +475,6 @@ public class MainWindowController {
         });
 
     }
+
 
 }

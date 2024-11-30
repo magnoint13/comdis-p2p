@@ -83,6 +83,9 @@ public interface ServerInterface extends Remote {
 
     // TODO: eliminar amigo (recordar notificar a cada uno que esta offline)
 
+    void deleteFriendship(RemoteClient client, String to) throws NotFoundException, RemoteException;
+
+
     // ==== BUSCAR USUARIOS ============================================================================================
 
     /**
@@ -96,4 +99,7 @@ public interface ServerInterface extends Remote {
     //       Supuestamente, equals de dos objetos remotos tambien funcionaria
 
     void changePassword(String username, String oldpassword,String newpassword) throws  AuthException, RemoteException;
+
+
+    Collection<String> getFriends(RemoteClient handle) throws RemoteException, NotFoundException;
 }

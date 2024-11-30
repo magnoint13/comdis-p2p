@@ -19,7 +19,7 @@
                      <Font size="19.0" />
                   </font>
                </Label>
-               <StackPane fx:id="chatPane"/>
+               <StackPane fx:id="chatPane" />
                <HBox fx:id="hBox" prefHeight="42.0" prefWidth="231.0">
                   <children>
                      <TextField fx:id="inputMsg" prefHeight="40.0" prefWidth="120.0" />
@@ -30,6 +30,15 @@
          </VBox>
 
         </SplitPane>
+    </Tab>
+
+    <!-- =========================================================================================================== -->
+
+    <Tab onSelectionChanged="#getFriends" text="Amigos">
+        <VBox styleClass="background-panel">
+            <ListView fx:id="friendsList" onMouseClicked="#printSelectedFriend" VBox.vgrow="ALWAYS" />
+            <Button fx:id="BtnDeleteFriend" mnemonicParsing="false" onAction="#deleteFriendship" text="Eliminar amigo" />
+        </VBox>
     </Tab>
 
     <!-- =========================================================================================================== -->

@@ -63,6 +63,11 @@ class Client implements ClientCallback {
     }
 
     @Override
+    public void friendshipFinished(RemoteClient friend) throws RemoteException {
+        callbacks.friendshipFinished(friend);
+    }
+
+    @Override
     public void friendRequests(Collection<String> requests) throws RemoteException {
         callbacks.friendRequests(requests);
     }

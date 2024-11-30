@@ -251,7 +251,6 @@ class DataBaseController implements AutoCloseable {
                 """)
         ) {
             pst.setString(1, username);
-
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
                     friends.add(rs.getString("friend"));
@@ -260,7 +259,6 @@ class DataBaseController implements AutoCloseable {
         } catch (SQLException error) {
             PtpException.logError(error);
         }
-
         return friends;
     }
 
@@ -446,7 +444,28 @@ class DataBaseController implements AutoCloseable {
         return requests;
     }
 
-    // TODO: eliminar amigo
+    public void deleteFriendship(RemoteClient client, String other) throws NotFoundException {
+        if(!userExists(client.getUsername())) {
+            throw new NotFoundException("El usuario \"%s\" no existe".formatted(client.getUsername()));
+        }
+        if(!userExists(other)) {
+            throw new NotFoundException("El usuario \"%s\" no existe".formatted(other));
+        }
+        try (PreparedStatement pst = connection.prepareStatement("""
+                delete from Amigos
+                where (nombreUsuario1 = ? and nombreUsuario2 = ?) or
+                      (nombreUsuario1 = ? and nombreUsuario2 = ?);
+                """)
+        ) {
+            pst.setString(1, client.getUsername());
+            pst.setString(2, other);
+            pst.setString(3, other);
+            pst.setString(4, client.getUsername());
+            pst.executeUpdate();
+        } catch (SQLException error) {
+            PtpException.logError(error);
+        }
+    }
 
 
     // ==== AJUSTES ================================================================================================

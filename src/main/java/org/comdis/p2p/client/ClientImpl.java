@@ -153,6 +153,16 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
         server.cancelFriendRequest(handle, other);
     }
 
+    public void deleteFriendship(String to) throws NotFoundException, RemoteException {
+        server.deleteFriendship(handle,to);
+    }
+
+    public Collection<String> getFriends() throws NotFoundException, RemoteException{
+        return server.getFriends(handle);
+    }
+
+
+
     // ==== ENVIAR MENSAJE =============================================================================================
 
     public void sendMessage(RemoteClient friendHandle,RemoteClient sender, String msg) throws RemoteException {
@@ -215,6 +225,16 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
         friendsOnline.remove(friend.getUsername());
     }
 
+    @Override
+    public void friendshipFinished(RemoteClient friend) throws RemoteException {
+        System.out.printf("Amistad con %s finalizada\n", friend.getUsername());
+        mainWindowController.createAlert("INFORMATION","Amistad finalizada","Se ha finalizado una amistad","Usuario: " + friend.getUsername());
+        mainWindowController.removeContact(friend.getUsername());
+        mainWindowController.deleteChat(friend.getUsername());
+        mainWindowController.removeFriend(friend.getUsername());
+        friendsOnline.remove(friend.getUsername());
+    }
+
     // ==== NOTIFICACIONES DE PETICIONES DE AMISTAD ====================================================================
 
     @Override
@@ -240,4 +260,5 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     public void changePassword(String username,String oldpassword, String newpasword) throws AuthException, RemoteException{
         server.changePassword(username,oldpassword,newpasword);
     }
+
 }

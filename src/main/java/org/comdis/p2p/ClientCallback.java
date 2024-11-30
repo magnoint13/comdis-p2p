@@ -46,4 +46,7 @@ public interface ClientCallback extends Remote {
 
     // TODO: notificaciones de que una solicitud enviada se ha aceptado o rechazado
     void changePassword(String username, String oldpassword, String newpasword) throws AuthException, RemoteException;
+
+    void friendshipFinished(RemoteClient friend) throws RemoteException;
+
 }
