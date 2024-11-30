@@ -8,10 +8,10 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.*;
 
@@ -21,6 +21,7 @@ import java.util.Collection;
 
 // TODO: notificar al cliente cuando esta online
 public class MainWindowController {
+
 
     // Lista de chats (ChatView) que contienen los mensajes
     private ObservableList<Node> chatLists;
@@ -40,11 +41,28 @@ public class MainWindowController {
     // Elementos de la GUI que se actualizan dinamicamente
     @FXML private Label inputFailed;
     @FXML private SplitPane splitPane;
-    @FXML private VBox chatPane;
+    @FXML private StackPane chatPane;
+    @FXML private VBox vBox;
+    @FXML private Button btnSend;
+    @FXML private Label chatName;
+    @FXML private HBox hBox;
 
     @FXML
     public void initialize() {
         ClientImpl.getInstance().setMainWindowController(this);
+
+        //Ajustar la zona de los chats
+        chatPane.setVisible(false);
+
+        inputMsg.setPromptText("Escribe un mensaje");
+        inputMsg.setVisible(false);
+        btnSend.setVisible(false);
+
+        //Se alarga el campo del mensaje
+        HBox.setHgrow(inputMsg, Priority.ALWAYS);
+
+        //Se alarga el stackpane dentro del vBox
+        VBox.setVgrow(chatPane, Priority.ALWAYS);
 
         // Notificar de los amigos ya conectados
         Collection<RemoteClient> friendsOnline = ClientImpl.getInstance().getFriendsOnline();
@@ -86,6 +104,7 @@ public class MainWindowController {
     public void addContact(String username) {
         Platform.runLater(() -> {
             contacts.getItems().add(username);
+
         });
     }
 
@@ -107,33 +126,18 @@ public class MainWindowController {
         });
     }
 
-
-    // ==== CHATS ======================================================================================================
-
-    @FXML
-    public void sendMessage() {
-        System.out.println("Enviar mensaje");
-    }
-
-    @FXML
-    public void openChat(MouseEvent mouseEvent) {
-        // Obtener el ítem seleccionado del ListView
+     /*
         String selectedItem = contacts.getSelectionModel().getSelectedItem();
         System.out.println("Has seleccionado el chat con " + selectedItem);
-
-        // Si es la primera vez que se habre un chat, se borra el mensaje de aviso
-        if (chatLists == null) {
+        if(chatLists == null){
+            chatLists = FXCollections.observableArrayList();
             chatPane.getChildren().clear();
 
             Label lblChatName = new Label(selectedItem);
             lblChatName.setId("lblChatName"); // Para el CSS
             chatPane.getChildren().add(lblChatName);
 
-            StackPane stackPane = new StackPane();
-            chatLists = stackPane.getChildren();
-            chatPane.setVgrow(stackPane, Priority.ALWAYS);
-
-            chatLists.add(new ChatView(contacts.getItems().get(0)));
+            chatLists.add(new ChatView(contacts.getItems().getFirst()));
 
             HBox hbox = new HBox();
             inputMsg = new TextField();
@@ -146,21 +150,139 @@ public class MainWindowController {
                 sendMessage();
             });
             hbox.getChildren().add(btnSend);
-        } else {
+        }else{
             ChatView selected = null;
             for (Node n : chatLists) {
-                if (n instanceof ChatView chatView && chatView.fromUser(selectedItem)) {
-                    // TODO: mostrar el chatview en el stackpane
-                    selected = chatView;
-                    break;
+                if (n instanceof ChatView chatView ) {
+                    chatView.setVisible(false);
+                    if (chatView.fromUser(selectedItem))
+                         selected = chatView;
+                         break;
                 }
             }
             if (selected == null) {
                 chatLists.add(new ChatView(selectedItem));
-            } else {
-                chatPane.getChildren().remove(selected);
-                chatPane.getChildren().add(selected);
+            }else{
+                selected.setVisible(true);
             }
+        }*/
+
+
+    // ==== CHATS ======================================================================================================
+
+
+    public void deleteChat(String friend) {
+        Platform.runLater(() -> {
+            for (Node n : chatLists) {
+                if (n instanceof ChatView chat && chat.fromUser(friend)) {
+                    chatPane.getChildren().remove(chat);
+                    chatName.setText("Selecione un chat");
+                    break;
+                }
+            }
+        });
+    }
+
+
+    public void receiveMessage(String sender, String message) {
+        if (chatLists == null) {
+            chatLists = FXCollections.observableArrayList();
+            chatPane.getChildren().clear();
+
+            ChatView chat = new ChatView(sender,chatPane);
+
+            chatLists.add(chat);
+            chat.addReceivedMsg(message);
+
+            chatPane.getChildren().add(chat);
+        }else {
+            ChatView selected = null;
+            for (Node n : chatLists) {
+                if (n instanceof ChatView chatView ) {
+                    if (chatView.fromUser(sender)) {
+                        selected = chatView;
+                        break;
+                    }
+                }
+            }
+            if (selected == null) {
+                ChatView chat = new ChatView(sender,chatPane);
+                chat.addReceivedMsg(message);
+                chatLists.add(chat);
+                chatPane.getChildren().add(chat);
+            }else{
+                selected.addReceivedMsg(message);
+            }
+        }
+        //DEBUG
+        System.out.println("Contenido de chatPane: " + chatPane.getChildren());
+    }
+
+    @FXML
+    public void sendMessage() {
+        if (inputMsg.getText().isEmpty()) {
+            return;
+        }
+        System.out.println("Enviar mensaje a " + contacts.getSelectionModel().getSelectedItem());
+        for (Node n : chatLists) {
+            if (n instanceof ChatView chat && chat.fromUser(contacts.getSelectionModel().getSelectedItem())) {
+                chat.addSentMsg(inputMsg.getText());
+                try {
+                    ClientImpl.getInstance().sendMessage(chat.getUsername(),inputMsg.getText());
+                }catch (RemoteException e){
+                    PtpException.logError(e);
+                }catch (NotFoundException e){
+                    createAlert("ERROR","Usuario desconocido","Usuario no encontrado",e.getMessage());
+                }
+                break;
+            }
+        }
+    }
+
+    @FXML
+    public void openChat(MouseEvent mouseEvent) {
+        chatPane.setVisible(true);
+        String selectedItem = contacts.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            return;
+        }
+        System.out.println("Has seleccionado el chat con " + selectedItem);
+        chatName.setText(selectedItem);
+        btnSend.setVisible(true);
+        inputMsg.setVisible(true);
+        if (chatLists == null) { //Primer chat, sin haber recibido mensaje
+            chatPane.getChildren().clear();
+
+            chatLists = FXCollections.observableArrayList();
+
+
+            ChatView chat = new ChatView(selectedItem,chatPane);
+
+            chatLists.add(chat);
+            chatPane.getChildren().add(chat);
+            chat.toFront();
+        }else{
+            ChatView selected = null;
+            for (Node n : chatLists) {
+                if (n instanceof ChatView chatView ) {
+                    if (chatView.fromUser(selectedItem)){
+                        selected = chatView;
+                        break;
+                    }
+                }
+            }
+            if (selected == null) { //El chat no existe, se crea uno nuevo
+                ChatView chat = new ChatView(selectedItem,chatPane);
+
+
+                chatLists.add(chat);
+                chatPane.getChildren().add(chat);
+                chat.toFront();
+            }else{
+                selected.toFront();
+            }
+            //DEBUG
+            System.out.println("Contenido de chatPane: " + chatPane.getChildren());
         }
     }
 

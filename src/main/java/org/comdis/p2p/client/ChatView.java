@@ -1,12 +1,16 @@
 package org.comdis.p2p.client;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class ChatView extends ScrollPane {
@@ -15,11 +19,16 @@ public class ChatView extends ScrollPane {
     private final String username;
     private final ObservableList<Node> msgNodes;
 
-    public ChatView(String username) {
+    private final VBox content;
+
+    public ChatView(String username, StackPane chatPane) {
         this.username = username;
 
-        VBox content = new VBox();
-        content.setPrefWidth(300);
+        content = new VBox();
+        content.setPrefWidth(chatPane.getWidth());
+        chatPane.widthProperty().addListener((observable, oldValue, newValue) -> {
+            content.setPrefWidth(newValue.doubleValue());  // Ajusta el ancho de content cuando cambie el ancho de chatPane
+        });
         content.setSpacing(10);
         content.setAlignment(Pos.BOTTOM_CENTER);
         content.setStyle("-fx-background-color: white;");
@@ -27,6 +36,15 @@ public class ChatView extends ScrollPane {
         msgNodes = content.getChildren();
 
         setContent(content);
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+
+    public VBox getContentObject() {
+        return content;
     }
 
     public void addReceivedMsg(String msg) {
@@ -39,11 +57,12 @@ public class ChatView extends ScrollPane {
 
     private void addMsg(String msg, boolean sent) {
         HBox msgBox = createText(msg, sent);
-        msgNodes.add(msgBox);
-
-        if (msgNodes.size() >= MAX_MESSAGES) {
-            msgNodes.removeFirst();
-        }
+        Platform.runLater(() -> {
+            msgNodes.add(msgBox);
+            if (msgNodes.size() >= MAX_MESSAGES) {
+                msgNodes.removeFirst();
+            };
+        });
     }
 
     private HBox createText(String text, boolean right) {

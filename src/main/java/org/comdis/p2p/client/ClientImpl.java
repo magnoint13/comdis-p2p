@@ -1,5 +1,6 @@
 package org.comdis.p2p.client;
 
+import javafx.application.Platform;
 import org.comdis.p2p.ClientCallback;
 import org.comdis.p2p.ClientPtp;
 import org.comdis.p2p.RemoteClient;
@@ -179,6 +180,9 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void message(RemoteClient sender, String message) throws RemoteException {
         System.out.printf("Mensaje de %s: %s\n", sender.getUsername(), message);
+        Platform.runLater(() -> {
+            mainWindowController.receiveMessage(sender.getUsername(),message);
+        });
     }
 
     // ==== NOTIFICACIONES DE AMIGOS ONLINE ============================================================================
@@ -207,6 +211,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
         System.out.printf("Amigo offline: %s\n", friend.getUsername());
         mainWindowController.createAlert("INFORMATION","Amigo desconectado","Se ha desconectado un amigo","Usuario: " + friend.getUsername());
         mainWindowController.removeContact(friend.getUsername());
+        mainWindowController.deleteChat(friend.getUsername());
         friendsOnline.remove(friend.getUsername());
     }
 
