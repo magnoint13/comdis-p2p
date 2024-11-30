@@ -1,6 +1,7 @@
 package org.comdis.p2p.client;
 
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import org.comdis.p2p.ClientCallback;
 import org.comdis.p2p.ClientPtp;
 import org.comdis.p2p.RemoteClient;
@@ -57,12 +58,12 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     private transient ServerInterface server;
 
     // Para poder actualizar cambios en la GUI
-    private transient MainWindowController mainWindowController;
+    private transient MainWindowController controller;
 
     // ==== SETTERS ====================================================================================================
 
-    public void setMainWindowController(MainWindowController mainWindowController) {
-        this.mainWindowController = mainWindowController;
+    public void setController(MainWindowController mainWindowController) {
+        this.controller = mainWindowController;
     }
 
     // ==== GETTERS ====================================================================================================
@@ -81,6 +82,10 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
 
     public boolean isOnline() {
         return handle != null;
+    }
+
+    public boolean isOnline(String friendUsername) {
+        return friendsOnline.get(friendUsername) != null;
     }
 
     // ==== CONECTAR Y DESCONECTAR =====================================================================================
@@ -165,20 +170,13 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
 
     // ==== ENVIAR MENSAJE =============================================================================================
 
-    public void sendMessage(RemoteClient friendHandle,RemoteClient sender, String msg) throws RemoteException {
-        friendHandle.sendMessage(sender, msg);
-    }
-
     public void sendMessage(String friend, String msg) throws RemoteException, NotFoundException {
         RemoteClient friendHandle = friendsOnline.get(friend);
-        // TODO: a lo mejor lanzar un mensaje mas especifico, puede no existir el usuario simplemente
-        //       El problema es que para saber si existe realmente, hace falta consultar al server.
-        //       Creo que para un mensaje de error es innecesario.
         if (friendHandle == null) {
             throw new NotFoundException("El usuario \"%s\" no esta online".formatted(friend));
         }
 
-        sendMessage(friendHandle,handle, msg);
+        friendHandle.sendMessage(handle, msg);
     }
 
     // =================================================================================================================
@@ -190,9 +188,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void message(RemoteClient sender, String message) throws RemoteException {
         System.out.printf("Mensaje de %s: %s\n", sender.getUsername(), message);
-        Platform.runLater(() -> {
-            mainWindowController.receiveMessage(sender.getUsername(),message);
-        });
+        controller.receiveMessage(sender.getUsername(), message);
     }
 
     // ==== NOTIFICACIONES DE AMIGOS ONLINE ============================================================================
@@ -211,27 +207,41 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void friendConnected(RemoteClient friend) throws RemoteException {
         System.out.printf("Amigo online: %s\n", friend.getUsername());
-        mainWindowController.createAlert("INFORMATION","Amigo conectado","Se ha conectado un amigo","Usuario: " + friend.getUsername());
-        mainWindowController.addContact(friend.getUsername());
+        controller.createAlert(
+               Alert.AlertType.INFORMATION,
+                "Amigo conectado",
+                "Se ha conectado un amigo",
+                "Usuario: " + friend.getUsername());
+        controller.addContact(friend.getUsername());
         friendsOnline.put(friend.getUsername(), friend);
     }
 
     @Override
     public void friendDisconnected(RemoteClient friend) throws RemoteException {
         System.out.printf("Amigo offline: %s\n", friend.getUsername());
-        mainWindowController.createAlert("INFORMATION","Amigo desconectado","Se ha desconectado un amigo","Usuario: " + friend.getUsername());
-        mainWindowController.removeContact(friend.getUsername());
-        mainWindowController.deleteChat(friend.getUsername());
+        controller.createAlert(
+                Alert.AlertType.INFORMATION,
+                "Amigo desconectado",
+                "Se ha desconectado un amigo",
+                "Usuario: " + friend.getUsername()
+        );
+        controller.removeContact(friend.getUsername());
         friendsOnline.remove(friend.getUsername());
     }
 
     @Override
     public void friendshipFinished(RemoteClient friend) throws RemoteException {
         System.out.printf("Amistad con %s finalizada\n", friend.getUsername());
-        mainWindowController.createAlert("INFORMATION","Amistad finalizada","Se ha finalizado una amistad","Usuario: " + friend.getUsername());
-        mainWindowController.removeContact(friend.getUsername());
-        mainWindowController.deleteChat(friend.getUsername());
-        mainWindowController.removeFriend(friend.getUsername());
+
+        controller.createAlert(
+                Alert.AlertType.INFORMATION,
+                "Amistad finalizada",
+                "Se ha finalizado una amistad",
+                "Usuario: " + friend.getUsername()
+        );
+
+        controller.removeContact(friend.getUsername());
+        controller.removeFriend(friend.getUsername());
         friendsOnline.remove(friend.getUsername());
     }
 
@@ -249,16 +259,21 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     @Override
     public void newFriendRequest(String username) throws RemoteException {
         System.out.printf("Nueva peticion de amistad: %s\n", username);
-        mainWindowController.createAlert("INFORMATION","Nueva solicitud amistad","Ha recibido una solicitud de amistad nueva","Usuario: " + username);
-        mainWindowController.addPendingRequest(username);
+        controller.createAlert(
+                Alert.AlertType.INFORMATION,
+                "Nueva solicitud amistad",
+                "Ha recibido una solicitud de amistad nueva",
+                "Usuario: " + username
+        );
+        controller.addPendingRequest(username);
         usersPendingRequests.add(username);
     }
 
     // ==== AJUSTES ====================================================================================================
 
     @Override
-    public void changePassword(String username,String oldpassword, String newpasword) throws AuthException, RemoteException{
-        server.changePassword(username,oldpassword,newpasword);
+    public void changePassword(String username, String oldPassword, String oldPassword2) throws AuthException, RemoteException{
+        server.changePassword(username, oldPassword, oldPassword2);
     }
 
 }

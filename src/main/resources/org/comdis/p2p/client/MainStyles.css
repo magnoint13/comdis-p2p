@@ -1,17 +1,10 @@
-.root {
-    -fx-background-color: white;
-}
-
-/* ================================================= */
+/* ==== TABS ======================================= */
 
 /* Contenedor de pestañas */
-.tab-pane {
-    -fx-padding: 10px;
-}
-
 .tab-pane .tab-header-area {
     -fx-fill-width: true;
     -fx-spacing: 5px;
+    -fx-padding: 10px;
 }
 
 .tab-pane .tab-header-background {
@@ -49,31 +42,11 @@
     -fx-border-width: 0;
 }
 
-/* ================================================= */
-
-#lstContacts {
-    -fx-min-width: 250px;
-    -fx-max-width: 500px;
-    -fx-fill-height: true;
-
-    -fx-background-color: limegreen;
-    -fx-vbar-policy: as-needed;
-    -fx-hbar-policy: never;
-}
-
-#lblTip {
-    -fx-font: bold 29 system;
-}
-
-#msgPane .viewport {
-    -fx-background-color: white;
-}
-
-/* ================================================= */
-
-.background-panel {
+/* Fondo de cada pestaña */
+.root, .background-panel {
     -fx-alignment: center;
     -fx-fill-width: true;
+    -fx-fill-height: true;
     -fx-background-color: white;
 
     /* scroll pane */
@@ -83,15 +56,72 @@
     -fx-hbar-policy: never;
 }
 
-/* ================================================= */
+/* ==== CHAT ======================================= */
+
+#splitSize {
+    -fx-min-width: 100px;
+    -fx-max-width: 300px;
+}
+
+#lstContacts {
+    -fx-fill-height: true;
+    -fx-background-color: white;
+    -fx-vbar-policy: as-needed;
+    -fx-hbar-policy: never;
+}
+
+#lstContacts .list-cell {
+    -fx-background-color: limegreen;
+
+    -fx-font: bold 14 system;
+    -fx-text-fill: white;
+
+    -fx-pref-height: 50px;
+    -fx-min-height: 50px;
+    -fx-max-height: 50px;
+}
+
+#lstContacts .list-cell:odd {
+    -fx-background-color: blue;
+}
+
+#lstContacts .list-cell:hover {
+    -fx-background-color: grey;
+}
+
+#lstContacts .list-cell:selected {
+    -fx-background-color: red;
+}
+
+#chatPane {
+    -fx-alignment: top-center;
+    -fx-fill-width: true;
+    -fx-background-color: white;
+}
+
+/* ==== AJUSTES ==================================== */
+
+#changePasswordForm {
+    -fx-alignment: center;
+    -fx-padding: 25px;
+    -fx-vgap: 5px;
+    -fx-hgap: 5px;
+
+    -fx-min-width: 500px;
+    -fx-max-width: 600px;
+}
+
+/* ==== COMMON ===================================== */
 
 /* Contiene input de texto y botones */
 .toolbar {
     -fx-alignment: center;
     -fx-background-color: white;
     -fx-spacing: 5px;
+    -fx-spacing: 10px;
 }
 
+/* Input de texto */
 .text-field {
     -fx-border-color: limegreen;
 }
@@ -101,6 +131,7 @@
     -fx-border-width: 3px;
 }
 
+/* Botones */
 .button {
     -fx-text-fill: white;
     -fx-background-color: limegreen;
@@ -118,12 +149,9 @@
     -fx-background-color: green;
 }
 
+/* Textos y etiquetas */
 .title {
     -fx-font: bold 20 system;
-}
-
-#lblChatName {
-    -fx-font: bold 16 system;
 }
 
 .error {
@@ -131,18 +159,7 @@
     -fx-font: bold 14 system;
 }
 
-#changePasswordForm {
-    -fx-alignment: center;
-    -fx-padding: 25px;
-    -fx-vgap: 5px;
-    -fx-hgap: 5px;
-
-    -fx-min-width: 500px;
-    -fx-max-width: 600px;
-}
-
-/* ================================================= */
-
+/* Listas de elementos */
 .list-view {
     -fx-border-width: 0;
     -fx-border-color: transparent;

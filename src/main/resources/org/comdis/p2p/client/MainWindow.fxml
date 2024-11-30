@@ -2,32 +2,39 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<TabPane tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdis.p2p.client.MainWindowController">
+<TabPane
+    tabClosingPolicy="UNAVAILABLE"
+    tabDragPolicy="FIXED"
+    xmlns="http://javafx.com/javafx/17.0.6"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="org.comdis.p2p.client.MainWindowController">
 
     <!-- =========================================================================================================== -->
 
     <Tab text="Chats">
-        <SplitPane fx:id="splitPane" dividerPositions="0.5">
+        <SplitPane dividerPositions="0.3" styleClass="background-panel">
 
-            <ListView fx:id="contacts" onMouseClicked="#openChat" />
-         <VBox fx:id="vBox" alignment="TOP_CENTER" prefHeight="426.0" prefWidth="220.0">
-            <children>
-               <Label fx:id="chatName" text="Seleccione un chat">
-                  <font>
-                     <Font size="19.0" />
-                  </font>
-               </Label>
-               <StackPane fx:id="chatPane" />
-               <HBox fx:id="hBox" prefHeight="42.0" prefWidth="231.0">
-                  <children>
-                     <TextField fx:id="inputMsg" prefHeight="40.0" prefWidth="120.0" />
-                     <Button fx:id="btnSend" mnemonicParsing="false" onAction="#sendMessage" prefHeight="45.0" prefWidth="55.0" text="Enviar" />
-                  </children>
-               </HBox>
-            </children>
-         </VBox>
+            <VBox fx:id="splitSize" styleClass="background-panel">
+                <Label fx:id="lblUsername" wrapText="true" styleClass="title"/>
+                <ListView fx:id="lstContacts" VBox.vgrow="ALWAYS">
+                    <placeholder>
+                        <Label text="No tienes amigos conectados" wrapText="true"/>
+                    </placeholder>
+                </ListView>
+            </VBox>
+
+            <VBox styleClass="background-panel">
+                <Label fx:id="lblChatName" text="Seleccione un chat" styleClass="title"/>
+                <!-- IMPORTANTE: para que el chat ocupe todo, sus contenedores tambien  -->
+                <VBox fx:id="chatPane" VBox.vgrow="ALWAYS" visible="false">
+                    <StackPane fx:id="chatDisplay" VBox.vgrow="ALWAYS" />
+                    <HBox styleClass="toolbar">
+                        <TextField fx:id="inputMsg" HBox.hgrow="ALWAYS" onAction="#sendMessage" />
+                        <Button mnemonicParsing="false" onAction="#sendMessage" text="Enviar" />
+                    </HBox>
+                </VBox>
+            </VBox>
 
         </SplitPane>
     </Tab>
@@ -36,8 +43,12 @@
 
     <Tab onSelectionChanged="#getFriends" text="Amigos">
         <VBox styleClass="background-panel">
-            <ListView fx:id="friendsList" onMouseClicked="#printSelectedFriend" VBox.vgrow="ALWAYS" />
-            <Button fx:id="BtnDeleteFriend" mnemonicParsing="false" onAction="#deleteFriendship" text="Eliminar amigo" />
+            <ListView fx:id="lstFriends" VBox.vgrow="ALWAYS">
+                <placeholder>
+                    <Label text="No tienes amigos.\nBuscalos en la pestaña de Añadir amigos." wrapText="true"/>
+                </placeholder>
+            </ListView>
+            <Button mnemonicParsing="false" onAction="#deleteFriendship" text="Eliminar amigo" />
         </VBox>
     </Tab>
 
@@ -46,11 +57,15 @@
     <Tab text="Añadir amigos">
         <VBox styleClass="background-panel">
             <HBox styleClass="toolbar">
-                <TextField fx:id="inputSearchUsers" promptText="Buscar usuarios" HBox.hgrow="ALWAYS" />
+                <TextField fx:id="inputSearchUsers" onAction="#searchUsers" promptText="Buscar usuarios" HBox.hgrow="ALWAYS" />
                 <Button mnemonicParsing="false" onAction="#searchUsers" text="Buscar" />
                 <Button mnemonicParsing="false" onAction="#sendFriendRequest" text="Agregar" />
             </HBox>
-            <ListView fx:id="searchResult" onMouseClicked="#printsSelectedUser" VBox.vgrow="ALWAYS" />
+            <ListView fx:id="lstSearchResult" VBox.vgrow="ALWAYS">
+                <placeholder>
+                    <Label text="Escribe algo para buscar" wrapText="true"/>
+                </placeholder>
+            </ListView>
         </VBox>
     </Tab>
 
@@ -58,7 +73,11 @@
 
     <Tab text="Solicitudes">
         <VBox styleClass="background-panel">
-            <ListView fx:id="pendingRequests" VBox.vgrow="ALWAYS" />
+            <ListView fx:id="pendingRequests" VBox.vgrow="ALWAYS">
+                <placeholder>
+                    <Label text="No tienes solicitudes de amistad pendientes" wrapText="true"/>
+                </placeholder>
+            </ListView>
             <HBox styleClass="toolbar">
                 <Button mnemonicParsing="false" onAction="#acceptFriendRequest" text="Aceptar" />
                 <Button mnemonicParsing="false" onAction="#rejectFriendRequest" text="Rechazar" />
@@ -73,26 +92,15 @@
             <Label styleClass="title" text="Ajustes" />
             <GridPane fx:id="changePasswordForm">
                 <Label text="Contraseña antigua:" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <PasswordField fx:id="inputOldPassword" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                <PasswordField fx:id="inputOldPassword" onAction="#changePassword" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
                 <Label text="Contraseña nueva:" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                <PasswordField fx:id="inputNewPassword1" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                <PasswordField fx:id="inputNewPassword1" onAction="#changePassword" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
                 <Label text="Repetir contraseña nueva:" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                <PasswordField fx:id="inputNewPassword2" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-            <columnConstraints>
-               <ColumnConstraints />
-               <ColumnConstraints />
-               <ColumnConstraints />
-            </columnConstraints>
-            <rowConstraints>
-               <RowConstraints />
-               <RowConstraints />
-               <RowConstraints />
-               <RowConstraints />
-            </rowConstraints>
+                <PasswordField fx:id="inputNewPassword2" onAction="#changePassword" GridPane.columnIndex="2" GridPane.rowIndex="3" />
             </GridPane>
-            <Label fx:id="inputFailed" styleClass="error" visible="false" />
+            <Label fx:id="lblInputFailed" styleClass="error" visible="false" />
             <Button onAction="#changePassword" styleClass="btn" text="Cambiar" />
         </VBox>
     </Tab>

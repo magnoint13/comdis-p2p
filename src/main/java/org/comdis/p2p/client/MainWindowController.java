@@ -1,6 +1,7 @@
 package org.comdis.p2p.client;
 
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -8,30 +9,24 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.*;
+import javafx.beans.value.ChangeListener;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Collection;
 
 
-// TODO: notificar al cliente cuando esta online
 public class MainWindowController {
-
-    // Lista de chats (ChatView) que contienen los mensajes
-    private ObservableList<Node> chatLists;
-
     // Listas de elementos
-    @FXML private ListView<String> pendingRequests;
-    @FXML private ListView<String> searchResult;
-    @FXML private ListView<String> contacts;
-    @FXML private ListView<String> friendsList;
+    @FXML private ListView<String> pendingRequests;  // Peticiones de amistad
+    @FXML private ListView<String> lstSearchResult;  // Resultados de búsqueda de usuarios
+    @FXML private ListView<String> lstContacts;      // Amigos online
+    @FXML private ListView<String> lstFriends;       // Lista de amigos
 
     // Text input
     @FXML private TextField inputMsg;
@@ -40,153 +35,244 @@ public class MainWindowController {
     @FXML private PasswordField inputNewPassword1;
     @FXML private PasswordField inputOldPassword;
 
-    // Elementos de la GUI que se actualizan dinamicamente
-    @FXML private Label inputFailed;
-    @FXML private SplitPane splitPane;
-    @FXML private StackPane chatPane;
-    @FXML private VBox vBox;
-    @FXML private Button btnSend;
-    @FXML private Label chatName;
-    @FXML private HBox hBox;
+    // Mensaje de error (pestaña de ajustes)
+    @FXML private Label lblInputFailed;
+
+    // Muestra el nombre del usuario conectado
+    @FXML private Label lblUsername;
+
+    // Elementos del chat
+    @FXML private VBox chatPane;          // Contiene StackPane chatDisplay y la zona donde introducir el mensaje
+    @FXML private StackPane chatDisplay;  // Lista de chats
+    @FXML private Label lblChatName;      // Indica el nombre del usuario del chat
+    private ChatView openedChat;          // Chat actualmente activo (debe estar por delante siempre)
 
     @FXML
     public void initialize() {
-        ClientImpl.getInstance().setMainWindowController(this);
+        // Indicar al cliente que actualice esta GUI
+        ClientImpl.getInstance().setController(this);
 
-        //Ajustar la zona de los chats
-        chatPane.setVisible(false);
+        // Añadir un listener de seleccion para abrir el chat correspondiente
+        // (Esto no se puede hacer mediante FXML)
+        lstContacts.getSelectionModel().selectedItemProperty().addListener(
+            (observableValue, oldValue, newValue) -> openChat()
+        );
 
-        inputMsg.setPromptText("Escribe un mensaje");
-        inputMsg.setVisible(false);
-        btnSend.setVisible(false);
-
-        //Se alarga el campo del mensaje
-        HBox.setHgrow(inputMsg, Priority.ALWAYS);
-
-        //Se alarga el stackpane dentro del vBox
-        VBox.setVgrow(chatPane, Priority.ALWAYS);
+        // Poner el nombre de usuario
+        lblUsername.setText("Amigos de %s".formatted(ClientImpl.getInstance().getUsername()));
 
         // Notificar de los amigos ya conectados y guardar lista de amigos
         Collection<RemoteClient> friendsOnline = ClientImpl.getInstance().getFriendsOnline();
-        if (!friendsOnline.isEmpty()) {
+        if (friendsOnline != null && !friendsOnline.isEmpty()) {
+            lstContacts.getItems().clear();
+
             StringBuilder builder = new StringBuilder();
-            builder.append("Usuarios: ");
             for (RemoteClient friend : friendsOnline) {
                 builder.append(friend.getUsername());
-                builder.append(' ');
-            }
-            createAlert("INFORMATION","Contactos","Amigos conectados:",builder.toString());
+                builder.append('\n');
 
-            // Añadimos amigos a la GUI
-            contacts.getItems().clear();
-            for(RemoteClient friend : friendsOnline){
-                contacts.getItems().add(friend.getUsername());
+                // Ya de paso, añadimos amigos a la GUI
+                lstContacts.getItems().add(friend.getUsername());
             }
+
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Amigos",
+                    "Amigos conectados:",
+                    builder.toString()
+            );
         }
 
         // Notificar de las peticiones de amistad pendientes
         Collection<String> pendingRequests = ClientImpl.getInstance().getPendingRequests();
-        if(pendingRequests != null){
-            if (!pendingRequests.isEmpty()) {
-                StringBuilder builder = new StringBuilder();
-                builder.append("Usuarios: ");
-                for (String solicitud : pendingRequests) {
-                    builder.append(solicitud);
-                    builder.append(' ');
-                }
-                createAlert("INFORMATION","Solicitudes pendientes","Tiene solicitudes de amistad pendientes por responder",builder.toString());
-                // Mostrar las solicitudes pendientes
-                this.pendingRequests.getItems().clear();
-                this.pendingRequests.getItems().addAll(ClientImpl.getInstance().getPendingRequests());
+        if(pendingRequests != null && !pendingRequests.isEmpty()){
+            StringBuilder builder = new StringBuilder();
+            for (String solicitud : pendingRequests) {
+                builder.append(solicitud);
+                builder.append('\n');
             }
+
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Solicitudes pendientes",
+                    "Tiene solicitudes de amistad pendientes por responder",
+                    builder.toString()
+            );
+
+            // Mostrar las solicitudes pendientes
+            this.pendingRequests.getItems().clear();
+            this.pendingRequests.getItems().addAll(ClientImpl.getInstance().getPendingRequests());
         }
     }
 
+    // ==== METODOS PARA ACTUALIZAR LA GUI =============================================================================
+
+    // NOTA: estas funciones se ejecutan desde ClientImpl, probablemente otro hilo.
+    // Por eso, es necesario el Platform.runLater.
 
     public void addContact(String username) {
-        Platform.runLater(() -> {
-            contacts.getItems().add(username);
-        });
+        Platform.runLater(() -> lstContacts.getItems().add(username));
     }
 
     public void removeContact(String username) {
         Platform.runLater(() -> {
-            contacts.getItems().remove(username);
+            // Quita la seleccion para evitar que se cambie a cualquier otro chat
+            // De esta forma, el usuario puede seguir viendo los mensajes hasta que seleccione otro chat
+            // Entonces, se borraran
+            lstContacts.getSelectionModel().clearSelection();
+            System.out.println(lstContacts.getSelectionModel().getSelectedItem());
+
+            lstContacts.getItems().remove(username);
+
+            // Si tenia el chat abierto, correspondiente al contacto que se quita
+            if (openedChat != null && openedChat.fromUser(username)) {
+                // Dejarlo abierto, pero marcarlo como desconectado
+                lblChatName.setText(username + " (desconectado)");
+
+                // Tampoco se permiten enviar mensajes
+                inputMsg.setText("");
+                inputMsg.setDisable(true);
+            }
         });
     }
 
     public void addPendingRequest(String username) {
-        Platform.runLater(() -> {
-            pendingRequests.getItems().add(username);
-        });
+        Platform.runLater(() -> pendingRequests.getItems().add(username));
     }
 
     public void removePendingRequest(String username) {
-        Platform.runLater(() -> {
-            pendingRequests.getItems().remove(username);
-        });
+        Platform.runLater(() -> pendingRequests.getItems().remove(username));
     }
 
     public void addFriend(String username) {
-        Platform.runLater(() -> {
-            friendsList.getItems().add(username);
-        });
+        Platform.runLater(() -> lstFriends.getItems().add(username));
     }
 
     public void removeFriend(String username) {
+        Platform.runLater(() -> lstFriends.getItems().remove(username));
+    }
+
+    public void createAlert(Alert.AlertType type, String title, String header, String content) {
         Platform.runLater(() -> {
-            friendsList.getItems().remove(username);
+            // Configurar el contenido del Alert
+            Alert alert = new Alert(type);
+            alert.setTitle(title);
+            alert.setHeaderText(header);
+            alert.setContentText(content);
+
+            // Centrar el Alert en la ventana principal
+            alert.setOnShown(ignoredDialogEvent -> {
+
+                Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
+
+                // Listener para las propiedades de ancho y alto
+                ChangeListener<Number> listener = new ChangeListener<>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                        // Si la ventana no se ha configurado aun, estos valores son NaN.
+                        if (Double.isNaN(alertStage.getWidth()) || Double.isNaN(alertStage.getHeight())) {
+                            return;
+                        }
+
+                        // Obtener las coordenadas de la ventana principal
+                        Stage primaryStage = (Stage) lstContacts.getScene().getWindow();
+                        final double x = primaryStage.getX();
+                        final double y = primaryStage.getY();
+                        final double width = primaryStage.getWidth();
+                        final double height = primaryStage.getHeight();
+
+                        // Calcular la posición del Alert para que esté centrado en la ventana principal
+                        alertStage.setX(x + width / 2.0 - alertStage.getWidth() / 2.0);
+                        alertStage.setY(y + height / 2.0 - alertStage.getHeight() / 2.0);
+
+                        // Remover los listeners una vez que se haya centrado
+                        alertStage.widthProperty().removeListener(this);
+                        alertStage.heightProperty().removeListener(this);
+                    }
+                };
+
+                alertStage.widthProperty().addListener(listener);
+                alertStage.heightProperty().addListener(listener);
+            });
+
+            alert.showAndWait();
         });
     }
 
     // ==== CHATS ======================================================================================================
 
+    @FXML
+    public void openChat() {
+        chatPane.setVisible(true);
 
-    public void deleteChat(String friend) {
-        Platform.runLater(() -> {
-            for (Node n : chatLists) {
-                if (n instanceof ChatView chat && chat.fromUser(friend)) {
-                    chatPane.getChildren().remove(chat);
-                    chatName.setText("Selecione un chat");
+        String selectedUser = lstContacts.getSelectionModel().getSelectedItem();
+        if (selectedUser == null) {
+            return;
+        }
+
+        System.out.println("Has seleccionado el chat con " + selectedUser);
+        lblChatName.setText(selectedUser);
+
+        // Buscar el chat deseado por la interfaz
+        ChatView selected = null;
+        for (Node n : chatDisplay.getChildren()) {
+            if (n instanceof ChatView chatView ) {
+                if (chatView.fromUser(selectedUser)){
+                    selected = chatView;
                     break;
                 }
             }
-        });
+        }
+
+        if (selected == null) {
+            // El chat no existe, se crea uno nuevo
+            selected = new ChatView(selectedUser);
+            VBox.setVgrow(selected, Priority.ALWAYS);
+            // Se añade a la interfaz
+            chatDisplay.getChildren().add(selected);
+        }
+
+        selected.toFront();
+
+        // Ver si el chat anterior era de alguien desconectado
+        // En ese caso, será necesario borrarlo
+        if (openedChat != null && !ClientImpl.getInstance().isOnline(openedChat.getUsername())) {
+            chatDisplay.getChildren().remove(openedChat);
+
+            // Volver a activar el campo de escribir mensajes
+            inputMsg.setDisable(false);
+        }
+
+        // Ahora ya se puede actualizar el chat actual
+        openedChat = selected;
     }
 
-
     public void receiveMessage(String sender, String message) {
-        if (chatLists == null) {
-            chatLists = FXCollections.observableArrayList();
-            chatPane.getChildren().clear();
-
-            ChatView chat = new ChatView(sender,chatPane);
-
-            chatLists.add(chat);
-            chat.addReceivedMsg(message);
-
-            chatPane.getChildren().add(chat);
-        }else {
+        Platform.runLater(() -> {
+            // Buscar el ChatView al que añadir el mensaje
             ChatView selected = null;
-            for (Node n : chatLists) {
-                if (n instanceof ChatView chatView ) {
-                    if (chatView.fromUser(sender)) {
-                        selected = chatView;
-                        break;
-                    }
+            for (Node n : chatDisplay.getChildren()) {
+                if (n instanceof ChatView chatView && chatView.fromUser(sender)) {
+                    selected = chatView;
+                    break;
                 }
             }
+
             if (selected == null) {
-                ChatView chat = new ChatView(sender,chatPane);
-                chat.addReceivedMsg(message);
-                chatLists.add(chat);
-                chatPane.getChildren().add(chat);
-            }else{
-                selected.addReceivedMsg(message);
+                // Si no se encontró, se crea un nuevo ChatView para el nuevo mensaje
+                selected = new ChatView(sender);
+                // Se añade al resto de la interfaz
+                chatDisplay.getChildren().add(selected);
+
+                // Mantener el chat activo por encima
+                if (openedChat != null) {
+                    openedChat.toFront();
+                }
             }
-        }
-        //DEBUG
-        System.out.println("Contenido de chatPane: " + chatPane.getChildren());
+
+            // Finalmente, se le añade el mensaje
+            selected.addReceivedMsg(message);
+        });
     }
 
     @FXML
@@ -194,113 +280,108 @@ public class MainWindowController {
         if (inputMsg.getText().isEmpty()) {
             return;
         }
-        System.out.println("Enviar mensaje a " + contacts.getSelectionModel().getSelectedItem());
-        for (Node n : chatLists) {
-            if (n instanceof ChatView chat && chat.fromUser(contacts.getSelectionModel().getSelectedItem())) {
-                chat.addSentMsg(inputMsg.getText());
-                try {
-                    ClientImpl.getInstance().sendMessage(chat.getUsername(),inputMsg.getText());
-                }catch (RemoteException e){
-                    PtpException.logError(e);
-                }catch (NotFoundException e){
-                    createAlert("ERROR","Usuario desconocido","Usuario no encontrado",e.getMessage());
-                }
-                break;
+
+        try {
+            String msg = inputMsg.getText();
+            String receiver = lstContacts.getSelectionModel().getSelectedItem();
+
+            if (receiver == null) {
+                return;
             }
+
+            // Enviar el mensaje
+            ClientImpl.getInstance().sendMessage(receiver, msg);
+
+            // Mostrar en la GUI que el mensaje enviado
+            System.out.println("Enviar mensaje a " + receiver);
+            openedChat.addSentMsg(msg);
+
+        } catch (NotFoundException e) {
+            // Es imposible que se lance NotFoundException, dado que el usuario
+            // lo ha seleccionado en la interfaz.
+            PtpException.logError(e);
+        } catch (RemoteException e) {
+            PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }
-    }
 
-    @FXML
-    public void openChat(MouseEvent mouseEvent) {
-        chatPane.setVisible(true);
-        String selectedItem = contacts.getSelectionModel().getSelectedItem();
-        if (selectedItem == null) {
-            return;
-        }
-        System.out.println("Has seleccionado el chat con " + selectedItem);
-        chatName.setText(selectedItem);
-        btnSend.setVisible(true);
-        inputMsg.setVisible(true);
-        if (chatLists == null) { //Primer chat, sin haber recibido mensaje
-            chatPane.getChildren().clear();
-
-            chatLists = FXCollections.observableArrayList();
-
-
-            ChatView chat = new ChatView(selectedItem,chatPane);
-
-            chatLists.add(chat);
-            chatPane.getChildren().add(chat);
-            chat.toFront();
-        }else{
-            ChatView selected = null;
-            for (Node n : chatLists) {
-                if (n instanceof ChatView chatView ) {
-                    if (chatView.fromUser(selectedItem)){
-                        selected = chatView;
-                        break;
-                    }
-                }
-            }
-            if (selected == null) { //El chat no existe, se crea uno nuevo
-                ChatView chat = new ChatView(selectedItem,chatPane);
-
-
-                chatLists.add(chat);
-                chatPane.getChildren().add(chat);
-                chat.toFront();
-            }else{
-                selected.toFront();
-            }
-            //DEBUG
-            System.out.println("Contenido de chatPane: " + chatPane.getChildren());
-        }
+        // Limpiar el TextField para el siguiente mensaje
+        inputMsg.setText("");
     }
 
     // ==== BUSCAR AMIGOS ==============================================================================================
 
     @FXML
-    public void searchUsers(ActionEvent actionEvent) {
+    public void searchUsers(ActionEvent ignoredActionEvent) {
         if (inputSearchUsers.getText().isEmpty()) {
             return;
         }
 
         try {
             Collection<String> result = ClientImpl.getInstance().searchUsernames(inputSearchUsers.getText());
-            searchResult.getItems().clear();
+            lstSearchResult.getItems().clear();
             ObservableList<String> items = FXCollections.observableArrayList();
             items.addAll(result);
-            searchResult.setItems(items);
+            lstSearchResult.setItems(items);
 
-            // Debug
-            System.out.println("Búsqueda de usuarios:");
-            for (String r : result) {
-                System.out.println("\t" + r);
-            }
-        } catch (RemoteException error) {
-            createAlert("ERROR","Excepción remota","Ha ocurrido una excepción de RemoteException","");
-            PtpException.logError(error);
+        } catch (RemoteException e) {
+            PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }
     }
 
     // ==== SOLICITUDES DE AMISTAD =====================================================================================
 
     @FXML
-    public void sendFriendRequest(ActionEvent actionEvent) {
-        String other = searchResult.getSelectionModel().getSelectedItem();
+    public void sendFriendRequest(ActionEvent ignoredActionEvent) {
+        String other = lstSearchResult.getSelectionModel().getSelectedItem();
         try {
             ClientImpl.getInstance().sendFriendRequest(other);
-            createAlert("INFORMATION","Solicitud enviada","Solicitud enviada correctamente","");
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Operacion exitosa",
+                    "Solicitud enviada",
+                    "Se ha enviado una solicitud de amistad al usuario \"%s\"".formatted(other)
+            );
         } catch (AlreadyExistsException e) {
-            createAlert("INFORMATION","Solicitud existente","Ya hay una solicitud pendiente","Espere a la respuesta del otro usuario");
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Solicitud existente",
+                    "Ya hay una solicitud pendiente",
+                    "Espere a la respuesta del otro usuario"
+            );
         } catch (NotFoundException e) {
-            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(other));
-        } catch (RemoteException e) {
-            createAlert("ERROR","Excepción remota","Ha ocurrido una excepción de RemoteException","");
-            PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Usuario desconocido",
+                    "Usuario desconocido",
+                    "No se ha encontrado al usuario de ID \"%s\"".formatted(other));
         } catch (PetitionFromOtherExistsException e) {
-            createAlert("INFORMATION","Solicitud existente","Existe ya una solicitud de amistad",e.getMessage());
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Solicitud existente",
+                    "Existe ya una solicitud de amistad",
+                    e.getMessage()
+            );
             acceptFriendRequest(other);
+        } catch (RemoteException e) {
+            PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }
     }
 
@@ -310,34 +391,59 @@ public class MainWindowController {
             System.out.println("Has aceptado la solicitud de " + newFriend);
             pendingRequests.getItems().remove(newFriend);
         } catch (AlreadyExistsException e) {
-            createAlert("INFORMATION","Ya existe","Ya existe","Tu amistad con \"%s\" ya ha sido establecida".formatted(newFriend));
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Ya existe",
+                    "Ya existe",
+                    "Tu amistad con \"%s\" ya ha sido establecida".formatted(newFriend)
+            );
             // Si estaba selecionado es que no se habia borrado de antes
             pendingRequests.getItems().remove(newFriend);
         } catch (NotFoundException e) {
-            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(newFriend));
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Usuario desconocido",
+                    "Usuario desconocido",
+                    "No se ha encontrado al usuario de ID \"%s\"".formatted(newFriend)
+            );
         } catch (RemoteException e) {
-            createAlert("ERROR","Excepción remota","Ha ocurrido una excepción de RemoteException","");
             PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }
 
     }
 
-
     @FXML
-    public void acceptFriendRequest(ActionEvent actionEvent) {
+    public void acceptFriendRequest(ActionEvent ignoredActionEvent) {
         String newFriend = pendingRequests.getSelectionModel().getSelectedItem();
         acceptFriendRequest(newFriend);
     }
 
     @FXML
-    public void rejectFriendRequest(ActionEvent event) {
+    public void rejectFriendRequest(ActionEvent ignoredEvent) {
         String rejected = pendingRequests.getSelectionModel().getSelectedItem();
         try {
             ClientImpl.getInstance().cancelFriendRequest(rejected);
         } catch (RemoteException e) {
             PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }catch (NotFoundException e){
-            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(rejected));
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Usuario desconocido",
+                    "Usuario desconocido",
+                    "No se ha encontrado al usuario de ID \"%s\"".formatted(rejected)
+            );
         }
     }
 
@@ -347,92 +453,107 @@ public class MainWindowController {
             Collection<String> result = ClientImpl.getInstance().getFriends();
             if(result != null) {
                 if (!result.isEmpty()){
-                    friendsList.getItems().clear();
-                    friendsList.getItems().addAll(ClientImpl.getInstance().getFriends());
+                    lstFriends.getItems().clear();
+                    lstFriends.getItems().addAll(ClientImpl.getInstance().getFriends());
                 }
             }
-        }catch (RemoteException e){
+        } catch (RemoteException e){
             PtpException.logError(e);
-        }catch (NotFoundException e){
-            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername()));
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
+        } catch (NotFoundException e){
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Usuario desconocido",
+                    "Usuario desconocido",
+                    "No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername())
+            );
         }
     }
 
     @FXML
     public void deleteFriendship(ActionEvent actionEvent) {
-        String friend = friendsList.getSelectionModel().getSelectedItem();
+        String friend = lstFriends.getSelectionModel().getSelectedItem();
         if (friend == null) {
             return;
         }
+
         try {
             ClientImpl.getInstance().deleteFriendship(friend);
-            deleteChat(friend);
             removeFriend(friend);
             removeContact(friend);
-        }catch (RemoteException e){
+        } catch (NotFoundException e){
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Usuario desconocido",
+                    "Usuario desconocido",
+                    "No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername())
+            );
+        } catch (RemoteException e){
             PtpException.logError(e);
-        }catch (NotFoundException e){
-            createAlert("INFORMATION","Usuario desconocido","Usuario desconocido","No se ha encontrado al usuario de ID \"%s\"".formatted(friend));
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }
     }
 
     // ==== AJUSTES ======================================================================================================
 
     @FXML
-    public void changePassword(ActionEvent actionEvent) {
-        if(inputNewPassword1.getText().isEmpty() || inputNewPassword2.getText().isEmpty() || inputOldPassword.getText().isEmpty()){
-            inputFailed.setVisible(true);
-            inputFailed.setText("Debe rellenar todos los campos");
-        }else{
-            inputFailed.setVisible(false);
-            if(inputNewPassword1.getText().equals(inputNewPassword2.getText())){
-                try {
-                    ClientImpl.getInstance().changePassword(ClientImpl.getInstance().getUsername(),inputOldPassword.getText(),inputNewPassword1.getText());
-                    createAlert("INFORMATION","Operación exitosa","Contraseña actualizada correctamente","");
-                }catch (AuthException e){
-                    createAlert("ERROR","Credenciales inválidas",e.getMessage(),"Revise por favor si la contraseña es correcta");
-                }catch (RemoteException e) {
-                    PtpException.logError(e);
-                }
+    public void changePassword(ActionEvent ignoredActionEvent) {
+        if (
+                inputNewPassword1.getText().isEmpty()
+                || inputNewPassword2.getText().isEmpty()
+                || inputOldPassword.getText().isEmpty()
+        ){
+            lblInputFailed.setVisible(true);
+            lblInputFailed.setText("Debe rellenar todos los campos");
+            return;
+        }
 
-            }else{
-                inputFailed.setVisible(true);
-                inputFailed.setText("Las contraseñas introducidas no coinciden");
-            }
+        lblInputFailed.setVisible(false);
+
+        if (!inputNewPassword1.getText().equals(inputNewPassword2.getText())) {
+            lblInputFailed.setText("Las contraseñas introducidas no coinciden");
+            lblInputFailed.setVisible(true);
+            return;
+        }
+
+        try {
+            ClientImpl.getInstance().changePassword(
+                    ClientImpl.getInstance().getUsername(),
+                    inputOldPassword.getText(),
+                    inputNewPassword1.getText()
+            );
+
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Operación exitosa",
+                    "Contraseña actualizada correctamente",
+                    ""
+            );
+        } catch (AuthException e){
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Credenciales inválidas",
+                    e.getMessage(),
+                    "Revise por favor si la contraseña es correcta"
+            );
+        } catch (RemoteException e) {
+            PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
         }
     }
-
-    // ==== OTROS ======================================================================================================
-
-    @FXML
-    public void printRequestSelected(MouseEvent mouseEvent) {
-        String selectedItem = searchResult.getSelectionModel().getSelectedItem();
-        System.out.println("Has seleccionado la solicitud de " + selectedItem);
-    }
-
-    @FXML
-    public void printsSelectedUser(MouseEvent mouseEvent) {
-        String selectedItem = searchResult.getSelectionModel().getSelectedItem();
-        System.out.println("Has seleccionado a " + selectedItem);
-    }
-
-    @FXML
-    public void printSelectedFriend(MouseEvent mouseEvent) {
-        String selectedItem = friendsList.getSelectionModel().getSelectedItem();
-        System.out.println("Has seleccionado a " + selectedItem);
-    }
-
-    public void createAlert(String type,String title, String header, String content) {
-        String type_static = type.toUpperCase();
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.valueOf(type_static));
-            alert.setTitle(title);
-            alert.setHeaderText(header);
-            alert.setContentText(content);
-            alert.showAndWait();
-        });
-
-    }
-
-
 }
