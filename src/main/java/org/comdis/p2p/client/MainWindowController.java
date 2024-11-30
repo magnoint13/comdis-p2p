@@ -139,48 +139,6 @@ public class MainWindowController {
         });
     }
 
-     /*
-        String selectedItem = contacts.getSelectionModel().getSelectedItem();
-        System.out.println("Has seleccionado el chat con " + selectedItem);
-        if(chatLists == null){
-            chatLists = FXCollections.observableArrayList();
-            chatPane.getChildren().clear();
-
-            Label lblChatName = new Label(selectedItem);
-            lblChatName.setId("lblChatName"); // Para el CSS
-            chatPane.getChildren().add(lblChatName);
-
-            chatLists.add(new ChatView(contacts.getItems().getFirst()));
-
-            HBox hbox = new HBox();
-            inputMsg = new TextField();
-            inputMsg.setId("inputMsg");
-            inputMsg.setPromptText("Escribe un mensaje");
-            hbox.setHgrow(inputMsg, Priority.ALWAYS);
-
-            Button btnSend = new Button("Enviar");
-            btnSend.setOnAction((ActionEvent action) -> {
-                sendMessage();
-            });
-            hbox.getChildren().add(btnSend);
-        }else{
-            ChatView selected = null;
-            for (Node n : chatLists) {
-                if (n instanceof ChatView chatView ) {
-                    chatView.setVisible(false);
-                    if (chatView.fromUser(selectedItem))
-                         selected = chatView;
-                         break;
-                }
-            }
-            if (selected == null) {
-                chatLists.add(new ChatView(selectedItem));
-            }else{
-                selected.setVisible(true);
-            }
-        }*/
-
-
     // ==== CHATS ======================================================================================================
 
 
