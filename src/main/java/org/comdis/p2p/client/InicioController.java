@@ -29,14 +29,6 @@ public class InicioController {
 
     @FXML
     public void initialize() {
-        // TODO: ni idea de porque no funciona
-        URL image = getClass().getResource("logo.png");
-        if (image != null) {
-            imageView.setImage(new Image(image.toExternalForm()));
-        } else {
-            System.err.println("[ERROR] No se pudo cargar el archivo \"logo.png\"");
-        }
-
         txtError.setVisible(false);
     }
 

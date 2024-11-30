@@ -81,6 +81,9 @@ public interface ServerInterface extends Remote {
     /*FriendStatus getFriendshipStatus(RemoteClient client, String other)
             throws NotFoundException, RemoteException;*/
 
+    /**
+     * Borra la amistad entre dos usuarios
+     */
     void deleteFriendship(RemoteClient client, String to) throws NotFoundException, RemoteException;
 
 
@@ -98,6 +101,8 @@ public interface ServerInterface extends Remote {
 
     void changePassword(String username, String oldpassword,String newpassword) throws  AuthException, RemoteException;
 
-
+    /**
+     * Obtiene una lista con los nombres de los amigos de un usuario
+     */
     Collection<String> getFriends(RemoteClient handle) throws RemoteException, NotFoundException;
 }

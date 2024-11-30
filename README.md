@@ -139,7 +139,8 @@ public interface ServerInterface extends Remote {
     // si es ACCEPTED, el server le notifica con friendConnected para que pueda hablar con él
     // si es REJECTED, se borra la request de la BD (se podría dejar para tener un histórico)
     // si es PENDING, se ignora (no se debería hacer la request)
-    // TODO: borrar amigo?
+    
+    void deleteFriendship(RemoteClient client, String to) throws NotFoundException, RemoteException;
 }
 ```
 
