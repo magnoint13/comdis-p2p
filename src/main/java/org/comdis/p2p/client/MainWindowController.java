@@ -9,6 +9,7 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -57,6 +58,33 @@ public class MainWindowController {
         lstContacts.getSelectionModel().selectedItemProperty().addListener(
             (observableValue, oldValue, newValue) -> openChat()
         );
+
+        // Configurar el CellFactory
+        lstContacts.setCellFactory(lv -> new TextFieldListCell<>() {
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    // Cambiar el estilo para un elemento específico
+                    if (hasUnreadMessage(item)) {
+                        setStyle("-fx-background-color: darkgreen; -fx-text-fill: white;"); // Color especial, mensajes no leídos
+                    } else {
+                        if(openedChat != null) {
+                            if (openedChat.fromUser(item)){ // Si es el chat abierto
+                                setStyle("-fx-background-color: red; -fx-text-fill: white;"); // Rojo
+                            }else{  // Si no
+                                setStyle("-fx-background-color: limegreen; -fx-text-fill: white;"); // Estilo default
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         // Poner el nombre de usuario
         lblUsername.setText("Amigos de %s".formatted(ClientImpl.getInstance().getUsername()));
@@ -199,6 +227,17 @@ public class MainWindowController {
         });
     }
 
+    private boolean hasUnreadMessage(String cell){
+        for (Node n : chatDisplay.getChildren()) {
+            if (n instanceof ChatView chatView ) {
+                if (chatView.isUnread() && chatView.fromUser(cell)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // ==== CHATS ======================================================================================================
 
     @FXML
@@ -234,6 +273,10 @@ public class MainWindowController {
         }
 
         selected.toFront();
+        // Se marca como no leído
+        selected.setUnread(false);
+        // Se actualiza la lista
+        lstContacts.refresh();
 
         // Ver si el chat anterior era de alguien desconectado
         // En ese caso, será necesario borrarlo
@@ -273,6 +316,11 @@ public class MainWindowController {
 
             // Finalmente, se le añade el mensaje
             selected.addReceivedMsg(message);
+            // Si no es el chat abierto se marca como no leído
+            if (openedChat != selected){
+                selected.setUnread(true);
+                lstContacts.refresh();
+            }
         });
     }
 

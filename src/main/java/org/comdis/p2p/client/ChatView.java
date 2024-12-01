@@ -14,6 +14,7 @@ public class ChatView extends ScrollPane {
 
     private final String username;
     private final ObservableList<Node> msgNodes;
+    private boolean unread;
 
     public ChatView(String username) {
         this.username = username;
@@ -46,6 +47,10 @@ public class ChatView extends ScrollPane {
         return pane;
     }
 
+    public boolean isUnread() {
+        return unread;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -75,5 +80,9 @@ public class ChatView extends ScrollPane {
             // Es decir, scroll al fondo
             setVvalue(1.2);
         });
+    }
+
+    public void setUnread(boolean unread) {
+        this.unread = unread;
     }
 }
