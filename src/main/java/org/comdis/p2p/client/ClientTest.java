@@ -100,7 +100,7 @@ class ClientTest {
                     try {
                         String username = askString("Usuario: ");
                         client.sendFriendRequest(username);
-                    } catch (AlreadyExistsException | NotFoundException  | PetitionFromOtherExistsException e) {
+                    } catch (AlreadyExistsException | NotFoundException | PetitionFromOtherExistsException e) {
                         System.out.println("ERROR: " + e.getMessage());
                     }
                 }

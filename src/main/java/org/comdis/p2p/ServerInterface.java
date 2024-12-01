@@ -36,7 +36,7 @@ public interface ServerInterface extends Remote {
      * @throws AuthException Si el usuario o la contraseña no son válidos.
      */
     RemoteClient connect(String username, String password, ClientCallback callbacks, ClientPtp msgCallback)
-            throws AuthException, RemoteException;
+            throws AuthException, RemoteException, AlreadyExistsException;
 
     /**
      * Desconectar el cliente.
@@ -99,10 +99,10 @@ public interface ServerInterface extends Remote {
     //       El server comprueba si esta online y si contraseña es correcta
     //       Supuestamente, equals de dos objetos remotos tambien funcionaria
 
-    void changePassword(String username, String oldpassword,String newpassword) throws  AuthException, RemoteException;
+    void changePassword(String username, String oldpassword, String newpassword) throws AuthException, RemoteException;
 
     /**
      * Obtiene una lista con los nombres de los amigos de un usuario
      */
-    Collection<String> getFriends(RemoteClient handle) throws RemoteException, NotFoundException;
+    Collection<String> getFriends(RemoteClient handle) throws RemoteException;
 }

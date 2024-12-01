@@ -31,20 +31,20 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     private final DataBaseController database;
 
-    public Server(String databaseFile, String creationString) throws SQLException, IOException {
+    public Server(String databaseFile) throws SQLException, IOException {
         super();
-        database = new DataBaseController(databaseFile, creationString);
+        database = new DataBaseController(databaseFile);
         connectedClients = new ConcurrentHashMap<>();
     }
 
     // ==== CONECTARSE/DESCONECTARSE ===================================================================================
 
     @Override
-    public RemoteClient connect(String username, String password, ClientCallback callbacks, ClientPtp msgCallback) throws AuthException, RemoteException {
+    public RemoteClient connect(String username, String password, ClientCallback callbacks, ClientPtp msgCallback) throws AuthException, RemoteException, AlreadyExistsException {
         // Comprobar si ya estaba conectado
         Client newClient = connectedClients.get(username);
         if (newClient != null) {
-            return newClient.getHandle();
+            throw new AlreadyExistsException("El usuario \"%s\" ya esta conectado".formatted(username));
         }
 
         // Lanza AuthException si el usuario no es valido
@@ -150,11 +150,11 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     // ==== PETICIONES DE AMISTAD ======================================================================================
 
     @Override
-    public void sendFriendRequest(RemoteClient from, String to) throws NotFoundException, AlreadyExistsException, RemoteException,PetitionFromOtherExistsException {
+    public void sendFriendRequest(RemoteClient from, String to) throws NotFoundException, AlreadyExistsException, RemoteException, PetitionFromOtherExistsException {
         // Almacenar la peticion en la BD para que constancia de ello
-        if(database.pendingFromOtherExists(to,from.getUsername())){
+        if (database.pendingFromOtherExists(to, from.getUsername())) {
             throw new PetitionFromOtherExistsException("Ya existe una solictud pendiente del usuario " + to + ", por ende se acepta esa solicitud automáticamente");
-        }else{
+        } else {
             database.sendFriendRequest(from.getUsername(), to);
 
             // Si el receptor esta online, ya se le notifica
@@ -168,29 +168,27 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     @Override
     public void acceptFriendRequest(RemoteClient accepts, String originalSender) throws NotFoundException, RemoteException, AlreadyExistsException {
-            database.acceptFriendRequest(accepts.getUsername(), originalSender);
-            // TODO: notificar a originalSender que se ha aceptado
+        database.acceptFriendRequest(accepts.getUsername(), originalSender);
 
-            // Si los usuarios están conectados, entonces se les notifica que están online
-            // De esta forma, podran empezar a mandarse mensajes
-            Client clientA = connectedClients.get(accepts.getUsername());
-            Client clientB = connectedClients.get(originalSender);
+        // Si los usuarios están conectados, entonces se les notifica que están online
+        // De esta forma, podran empezar a mandarse mensajes
+        Client clientA = connectedClients.get(accepts.getUsername());
+        Client clientB = connectedClients.get(originalSender);
 
-            if (clientA != null && clientB != null) {
-                clientA.friendConnected(clientB.getHandle());
-                clientB.friendConnected(clientA.getHandle());
-            }
+        if (clientA != null && clientB != null) {
+            clientA.friendConnected(clientB.getHandle());
+            clientB.friendConnected(clientA.getHandle());
+        }
     }
 
     @Override
     public void cancelFriendRequest(RemoteClient cancels, String other) throws NotFoundException, RemoteException {
         database.cancelFriendRequest(cancels.getUsername(), other);
-        // TODO: solo notificar a originalSender si no es el quien la cancela
     }
 
     @Override
     public void deleteFriendship(RemoteClient client, String other) throws NotFoundException, RemoteException {
-        database.deleteFriendship(client,other);
+        database.deleteFriendship(client, other);
 
         Client friend = connectedClients.get(other);
 
@@ -201,11 +199,11 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     @Override
     public void changePassword(String username, String oldpassword, String newpassword) throws AuthException, RemoteException {
-        database.changePassword(username,oldpassword,newpassword);
+        database.changePassword(username, oldpassword, newpassword);
     }
 
     @Override
-    public Collection<String> getFriends(RemoteClient handle) throws RemoteException, NotFoundException {
+    public Collection<String> getFriends(RemoteClient handle) throws RemoteException {
         return database.getFriends(handle.getUsername());
     }
 }

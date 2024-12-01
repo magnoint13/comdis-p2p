@@ -10,8 +10,7 @@ import org.sqlite.SQLiteErrorCode;
 import org.sqlite.SQLiteException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -20,18 +19,18 @@ class DataBaseController implements AutoCloseable {
 
     private final Connection connection;
 
-    public DataBaseController(String databaseFile, String creationScript) throws SQLException, IOException {
+    public DataBaseController(String databaseFile) throws SQLException, IOException {
         connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
         System.out.println("Conexion con SQLite establecida");
 
         // Configuracion
-        createBD(creationScript);
+        createBD(getClass().getResourceAsStream("bd_creation.sql"));
         enableForeignKeys();
     }
 
     // ==== CONFIGURACION ==============================================================================================
 
-    private void createBD(String creationScript) throws IOException {
+    private void createBD(InputStream creationScript) throws IOException {
         try {
             // Iniciar transaccion
             connection.setAutoCommit(false);
@@ -53,7 +52,7 @@ class DataBaseController implements AutoCloseable {
 
             try (Statement stmt = connection.createStatement()) {
                 // Si el numero de tablas no es el adecuado, se ejecuta el script de creacion
-                String script = new String(Files.readAllBytes(Paths.get(creationScript)));
+                String script = new String(creationScript.readAllBytes());
 
                 // Dividir las sentencias en caso de múltiples queries
                 String[] sentencias = script.split(";");
@@ -171,7 +170,7 @@ class DataBaseController implements AutoCloseable {
         }
     }
 
-    public boolean userExists(String username,String clave) {
+    public boolean userExists(String username, String clave) {
         try (PreparedStatement pst = connection.prepareStatement("""
                 select count(*) as count
                 from Usuarios
@@ -200,8 +199,8 @@ class DataBaseController implements AutoCloseable {
                 """)
         ) {
             pst.setString(1, from);
-            pst.setString(2,to);
-            pst.setString(3,FriendStatus.PENDING.toString());
+            pst.setString(2, to);
+            pst.setString(3, FriendStatus.PENDING.toString());
 
             try (ResultSet rs = pst.executeQuery()) {
                 return rs.next() && rs.getInt("count") == 1;
@@ -354,7 +353,6 @@ class DataBaseController implements AutoCloseable {
             }
 
             // Luego, actualizar el estado de la solicitud
-            // TODO: borrar la solicitud en su lugar?
             try (PreparedStatement pst = connection.prepareStatement("""
                     update Solicitudes
                     set estado = ? -- aceptada
@@ -464,10 +462,10 @@ class DataBaseController implements AutoCloseable {
     }
 
     public void deleteFriendship(RemoteClient client, String other) throws NotFoundException {
-        if(!userExists(client.getUsername())) {
+        if (!userExists(client.getUsername())) {
             throw new NotFoundException("El usuario \"%s\" no existe".formatted(client.getUsername()));
         }
-        if(!userExists(other)) {
+        if (!userExists(other)) {
             throw new NotFoundException("El usuario \"%s\" no existe".formatted(other));
         }
         try (PreparedStatement pst = connection.prepareStatement("""
@@ -489,7 +487,7 @@ class DataBaseController implements AutoCloseable {
     // ==== AJUSTES ================================================================================================
 
     public void changePassword(String username, String oldpassword, String newpassword) throws AuthException {
-        if (!userExists(username,oldpassword)) {
+        if (!userExists(username, oldpassword)) {
             throw new AuthException("Ha ocurrido un error al intentar cambiar la clave.La contraseña es incorrecta");
         }
         try (PreparedStatement pst = connection.prepareStatement("""

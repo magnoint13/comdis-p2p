@@ -1,6 +1,7 @@
 package org.comdis.p2p.client;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,7 +17,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.*;
-import javafx.beans.value.ChangeListener;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -58,33 +58,41 @@ public class MainWindowController {
         // Añadir un listener de seleccion para abrir el chat correspondiente
         // (Esto no se puede hacer mediante FXML)
         lstContacts.getSelectionModel().selectedItemProperty().addListener(
-            (observableValue, oldValue, newValue) -> openChat()
+                (observableValue, oldValue, newValue) -> openChat()
         );
 
-        // Configurar el CellFactory
-        lstContacts.setCellFactory(lv -> new TextFieldListCell<>() {
+        // Configurar el CellFactory para poner los colores de forma apropiada
+        lstContacts.setCellFactory(lv -> new ListCell<>() {
             @Override
             public void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
 
+                // Actualizar solo si no es vacio
                 if (empty || item == null) {
                     setText(null);
                     setStyle("");
-                } else {
-                    setText(item);
-                    // Cambiar el estilo para un elemento específico
-                    if (hasUnreadMessage(item)) {
-                        setStyle("-fx-background-color: darkgreen; -fx-text-fill: white;"); // Color especial, mensajes no leídos
-                    } else {
-                        if(openedChat != null) {
-                            if (openedChat.fromUser(item)){ // Si es el chat abierto
-                                setStyle("-fx-background-color: red; -fx-text-fill: white;"); // Rojo
-                            }else{  // Si no
-                                setStyle("-fx-background-color: limegreen; -fx-text-fill: white;"); // Estilo default
-                            }
-                        }
-                    }
+                    return;
                 }
+
+                // Poner el texto correspondiente
+                setText(item);
+                setStyle("-fx-cursor:hand;");
+
+                // Si el mensaje no está leido, se pone un color especial
+                if (hasUnreadMessage(item)) {
+                    setStyle(getStyle() + "-fx-background-color:darkgreen;");
+                    return;
+                }
+
+                // Si el chat es el abierto actualmente, queda en rojo
+                if (openedChat != null && openedChat.fromUser(item)) {
+                    setStyle(getStyle() + "-fx-background-color:red;");
+                    return;
+                }
+
+                // En caso contrario, se ponen dos variantes de verde que se alternan
+                String color = (getIndex() % 2 == 0) ? "#32cd32" : "#35b735";
+                setStyle(getStyle() + "-fx-background-color:%s;".formatted(color));
             }
         });
 
@@ -115,7 +123,7 @@ public class MainWindowController {
 
         // Notificar de las peticiones de amistad pendientes
         Collection<String> pendingRequests = ClientImpl.getInstance().getPendingRequests();
-        if(pendingRequests != null && !pendingRequests.isEmpty()){
+        if (pendingRequests != null && !pendingRequests.isEmpty()) {
             StringBuilder builder = new StringBuilder();
             for (String solicitud : pendingRequests) {
                 builder.append(solicitud);
@@ -150,7 +158,6 @@ public class MainWindowController {
             // De esta forma, el usuario puede seguir viendo los mensajes hasta que seleccione otro chat
             // Entonces, se borraran
             lstContacts.getSelectionModel().clearSelection();
-            System.out.println(lstContacts.getSelectionModel().getSelectedItem());
 
             lstContacts.getItems().remove(username);
 
@@ -277,9 +284,9 @@ public class MainWindowController {
         return alert.showAndWait();
     }
 
-    private boolean hasUnreadMessage(String cell){
+    private boolean hasUnreadMessage(String cell) {
         for (Node n : chatDisplay.getChildren()) {
-            if (n instanceof ChatView chatView ) {
+            if (n instanceof ChatView chatView) {
                 if (chatView.isUnread() && chatView.fromUser(cell)) {
                     return true;
                 }
@@ -300,14 +307,13 @@ public class MainWindowController {
             return;
         }
 
-        System.out.println("Has seleccionado el chat con " + selectedUser);
         lblChatName.setText(selectedUser);
 
         // Buscar el chat deseado por la interfaz
         ChatView selected = null;
         for (Node n : chatDisplay.getChildren()) {
-            if (n instanceof ChatView chatView ) {
-                if (chatView.fromUser(selectedUser)){
+            if (n instanceof ChatView chatView) {
+                if (chatView.fromUser(selectedUser)) {
                     selected = chatView;
                     break;
                 }
@@ -391,7 +397,7 @@ public class MainWindowController {
             ClientImpl.getInstance().sendMessage(receiver, msg);
 
             // Mostrar en la GUI que el mensaje enviado
-            System.out.println("Enviar mensaje a " + receiver);
+            System.out.println("Enviar mensaje a " + receiver + ": " + msg);
             openedChat.addSentMsg(msg);
 
         } catch (NotFoundException e) {
@@ -539,7 +545,7 @@ public class MainWindowController {
                     "Error inesperado",
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             createAlert(
                     Alert.AlertType.INFORMATION,
                     "Usuario desconocido",
@@ -553,13 +559,13 @@ public class MainWindowController {
     public void getFriends(Event ignoredEvent) {
         try {
             Collection<String> result = ClientImpl.getInstance().getFriends();
-            if(result != null) {
-                if (!result.isEmpty()){
+            if (result != null) {
+                if (!result.isEmpty()) {
                     lstFriends.getItems().clear();
                     lstFriends.getItems().addAll(ClientImpl.getInstance().getFriends());
                 }
             }
-        } catch (RemoteException e){
+        } catch (RemoteException e) {
             PtpException.logError(e);
             createAlert(
                     Alert.AlertType.ERROR,
@@ -567,18 +573,11 @@ public class MainWindowController {
                     "Error inesperado",
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
-        } catch (NotFoundException e){
-            createAlert(
-                    Alert.AlertType.INFORMATION,
-                    "Usuario desconocido",
-                    "Usuario desconocido",
-                    "No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername())
-            );
         }
     }
 
     @FXML
-    public void deleteFriendship(ActionEvent actionEvent) {
+    public void deleteFriendship(ActionEvent ignoredActionEvent) {
         String friend = lstFriends.getSelectionModel().getSelectedItem();
         if (friend == null) {
             return;
@@ -588,14 +587,14 @@ public class MainWindowController {
             ClientImpl.getInstance().deleteFriendship(friend);
             removeFriend(friend);
             removeContact(friend);
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             createAlert(
                     Alert.AlertType.INFORMATION,
                     "Usuario desconocido",
                     "Usuario desconocido",
                     "No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername())
             );
-        } catch (RemoteException e){
+        } catch (RemoteException e) {
             PtpException.logError(e);
             createAlert(
                     Alert.AlertType.ERROR,
@@ -612,8 +611,8 @@ public class MainWindowController {
     public void changePassword(ActionEvent ignoredActionEvent) {
         if (
                 inputNewPassword1.getText().isEmpty()
-                || inputNewPassword2.getText().isEmpty()
-                || inputOldPassword.getText().isEmpty()
+                        || inputNewPassword2.getText().isEmpty()
+                        || inputOldPassword.getText().isEmpty()
         ) {
             lblInputFailed.setVisible(true);
             lblInputFailed.setText("Debe rellenar todos los campos");
@@ -641,7 +640,7 @@ public class MainWindowController {
                     "Contraseña actualizada correctamente",
                     ""
             );
-        } catch (AuthException e){
+        } catch (AuthException e) {
             createAlert(
                     Alert.AlertType.ERROR,
                     "Credenciales inválidas",

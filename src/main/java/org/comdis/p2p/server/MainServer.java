@@ -10,13 +10,12 @@ import java.rmi.registry.Registry;
 public class MainServer {
     private static final int REGISTRY_PORT = 1099;
     public static final String REGISTRY_URL = "rmi://localhost:" + REGISTRY_PORT + "/server";
-    private static final String DATABASE_FILE = "P2P.db";
-    private static final String DATABASE_SCRIPT = "BD.sql";
+    private static final String DATABASE_FILE = "users.db";
 
     public static void main(String[] args) {
         try {
             startRegistry(REGISTRY_PORT);
-            Server server = new Server(DATABASE_FILE, DATABASE_SCRIPT);
+            Server server = new Server(DATABASE_FILE);
             Naming.rebind(REGISTRY_URL, server);
         } catch (Exception error) {
             // En caso de error, simplemente mostrarlo por pantalla

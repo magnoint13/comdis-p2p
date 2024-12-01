@@ -5,7 +5,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
@@ -13,7 +12,6 @@ import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.PtpException;
 
 import java.io.IOException;
-import java.net.URL;
 
 
 public class InicioController {
@@ -52,9 +50,8 @@ public class InicioController {
             txtError.setText("Usuario o contraseña incorrectos");
 
         } catch (AlreadyExistsException e) {
-            // Es imposible que ya esté conectado, si se acaba de iniciar
-            // Se muestra por la consola en caso de que haya algo mal
-            PtpException.logError(e);
+            txtError.setVisible(true);
+            txtError.setText("Ese usuario ya esta conectado");
         }
     }
 
