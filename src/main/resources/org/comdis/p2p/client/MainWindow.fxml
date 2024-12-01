@@ -102,8 +102,11 @@
                 <PasswordField fx:id="inputNewPassword2" onAction="#changePassword" GridPane.columnIndex="2" GridPane.rowIndex="3" />
             </GridPane>
             <Label fx:id="lblInputFailed" styleClass="error" visible="false" />
-            <Button onAction="#changePassword" styleClass="btn" text="Cambiar" />
-            <!-- TODO: boton de borrar cuenta -->
+            <HBox styleClass="toolbar">
+                <Button onAction="#changePassword" styleClass="btn" text="Cambiar" />
+                <Button onAction="#deleteUser" styleClass="btn" text="Borrar cuenta"/>
+                <Button onAction="#logOut" styleClass="btn" text="Cerrar sesión"/>
+            </HBox>
         </VBox>
     </Tab>
 </TabPane>

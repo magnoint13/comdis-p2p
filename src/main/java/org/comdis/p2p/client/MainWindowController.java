@@ -18,8 +18,10 @@ import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.*;
 import javafx.beans.value.ChangeListener;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Collection;
+import java.util.Optional;
 
 
 public class MainWindowController {
@@ -181,8 +183,8 @@ public class MainWindowController {
     }
 
     public void createAlert(Alert.AlertType type, String title, String header, String content) {
+        // Configurar el contenido del Alert
         Platform.runLater(() -> {
-            // Configurar el contenido del Alert
             Alert alert = new Alert(type);
             alert.setTitle(title);
             alert.setHeaderText(header);
@@ -204,6 +206,56 @@ public class MainWindowController {
 
                         // Obtener las coordenadas de la ventana principal
                         Stage primaryStage = (Stage) lstContacts.getScene().getWindow();
+                        // Evitar un error con la alerta que se ejecuta una vez eliminado el usuario
+                        if (primaryStage != null) {
+                            final double x = primaryStage.getX();
+                            final double y = primaryStage.getY();
+                            final double width = primaryStage.getWidth();
+                            final double height = primaryStage.getHeight();
+
+                            // Calcular la posición del Alert para que esté centrado en la ventana principal
+                            alertStage.setX(x + width / 2.0 - alertStage.getWidth() / 2.0);
+                            alertStage.setY(y + height / 2.0 - alertStage.getHeight() / 2.0);
+
+                            // Remover los listeners una vez que se haya centrado
+                            alertStage.widthProperty().removeListener(this);
+                            alertStage.heightProperty().removeListener(this);
+                        }
+                    }
+                };
+
+                alertStage.widthProperty().addListener(listener);
+                alertStage.heightProperty().addListener(listener);
+            });
+            alert.showAndWait();
+        });
+    }
+
+    // Metodo privado puesto que solo puede ser llamado desde el hilo principal
+    private Optional<ButtonType> creatConfirmationAlert(String title, String header, String content){
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        // Centrar el Alert en la ventana principal
+        alert.setOnShown(ignoredDialogEvent -> {
+
+            Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
+
+            // Listener para las propiedades de ancho y alto
+            ChangeListener<Number> listener = new ChangeListener<>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    // Si la ventana no se ha configurado aun, estos valores son NaN.
+                    if (Double.isNaN(alertStage.getWidth()) || Double.isNaN(alertStage.getHeight())) {
+                        return;
+                    }
+
+                    // Obtener las coordenadas de la ventana principal
+                    Stage primaryStage = (Stage) lstContacts.getScene().getWindow();
+                    // Evitar un error con la alerta que se ejecuta una vez eliminado el usuario
+                    if (primaryStage != null) {
                         final double x = primaryStage.getX();
                         final double y = primaryStage.getY();
                         final double width = primaryStage.getWidth();
@@ -217,14 +269,12 @@ public class MainWindowController {
                         alertStage.widthProperty().removeListener(this);
                         alertStage.heightProperty().removeListener(this);
                     }
-                };
-
-                alertStage.widthProperty().addListener(listener);
-                alertStage.heightProperty().addListener(listener);
-            });
-
-            alert.showAndWait();
+                }
+            };
+            alertStage.widthProperty().addListener(listener);
+            alertStage.heightProperty().addListener(listener);
         });
+        return alert.showAndWait();
     }
 
     private boolean hasUnreadMessage(String cell){
@@ -607,5 +657,67 @@ public class MainWindowController {
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
         }
+    }
+
+    @FXML
+    public void deleteUser(ActionEvent actionEvent) {
+        lblInputFailed.setVisible(false);
+        if(inputOldPassword.getText().isEmpty()) {
+            lblInputFailed.setVisible(true);
+            lblInputFailed.setText("Introduzca su contraseña para poder borrar la cuenta");
+        }else{
+            // Mostrar el cuadro de diálogo y esperar la respuesta del usuario
+            Optional<ButtonType> result = creatConfirmationAlert(
+                    "Borrar usuario",
+                    "¿Está seguro de que desea borrar su cuenta?",
+                    "Responda por favor"
+            );
+            // Procesar la respuesta del usuario
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                System.out.println("Usuario seleccionó Sí.");
+                try {
+                    ClientImpl.getInstance().deleteUser(ClientImpl.getInstance().getUsername(),inputOldPassword.getText());
+                    createAlert(
+                            Alert.AlertType.INFORMATION,
+                            "Operación exitosa",
+                            "Usuario eliminado correctamente",
+                            "Lamentamos que haya decidido cerrar su cuenta. Le esperamos de vuelta :)"
+                    );
+                    // Abrir la ventana de inicio
+                    ClientApp.launchInicio((Stage) lblUsername.getScene().getWindow());
+                } catch (AuthException e) {
+                    createAlert(
+                            Alert.AlertType.ERROR,
+                            "Credenciales inválidas",
+                            e.getMessage(),
+                            "Revise por favor si la contraseña es correcta"
+                    );
+                } catch (RemoteException e) {
+                    PtpException.logError(e);
+                    createAlert(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "Error inesperado",
+                            "Mensaje de error: %s".formatted(e.getMessage())
+                    );
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                System.out.println("Usuario seleccionó No o cerró la alerta.");
+            }
+        }
+    }
+
+    @FXML
+    public void logOut(ActionEvent actionEvent) {
+        // Abrir la ventana de inicio
+        try {
+            ClientImpl.getInstance().disconnect();
+            ClientApp.launchInicio((Stage) lblUsername.getScene().getWindow());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

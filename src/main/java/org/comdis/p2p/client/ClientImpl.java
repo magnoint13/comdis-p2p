@@ -138,8 +138,8 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
      * Nota: lanza NullPointerException cuando no esta conectado
      */
     public void deleteUser(String username, String password) throws AuthException, RemoteException {
-        server.deleteUser(username, password);
         disconnect();
+        server.deleteUser(username, password);
     }
 
     public Collection<String> searchUsernames(String username) throws RemoteException {
