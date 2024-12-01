@@ -2,9 +2,9 @@ package org.comdis.p2p.client;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.scene.Node;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;

@@ -1,6 +1,7 @@
 package org.comdis.p2p.client;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,7 +17,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.comdis.p2p.RemoteClient;
 import org.comdis.p2p.exceptions.*;
-import javafx.beans.value.ChangeListener;
 
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -24,28 +24,42 @@ import java.util.Collection;
 
 public class MainWindowController {
     // Listas de elementos
-    @FXML private ListView<String> pendingRequests;  // Peticiones de amistad
-    @FXML private ListView<String> lstSearchResult;  // Resultados de búsqueda de usuarios
-    @FXML private ListView<String> lstContacts;      // Amigos online
-    @FXML private ListView<String> lstFriends;       // Lista de amigos
+    @FXML
+    private ListView<String> pendingRequests;  // Peticiones de amistad
+    @FXML
+    private ListView<String> lstSearchResult;  // Resultados de búsqueda de usuarios
+    @FXML
+    private ListView<String> lstContacts;      // Amigos online
+    @FXML
+    private ListView<String> lstFriends;       // Lista de amigos
 
     // Text input
-    @FXML private TextField inputMsg;
-    @FXML private TextField inputSearchUsers;
-    @FXML private PasswordField inputNewPassword2;
-    @FXML private PasswordField inputNewPassword1;
-    @FXML private PasswordField inputOldPassword;
+    @FXML
+    private TextField inputMsg;
+    @FXML
+    private TextField inputSearchUsers;
+    @FXML
+    private PasswordField inputNewPassword2;
+    @FXML
+    private PasswordField inputNewPassword1;
+    @FXML
+    private PasswordField inputOldPassword;
 
     // Mensaje de error (pestaña de ajustes)
-    @FXML private Label lblInputFailed;
+    @FXML
+    private Label lblInputFailed;
 
     // Muestra el nombre del usuario conectado
-    @FXML private Label lblUsername;
+    @FXML
+    private Label lblUsername;
 
     // Elementos del chat
-    @FXML private VBox chatPane;          // Contiene StackPane chatDisplay y la zona donde introducir el mensaje
-    @FXML private StackPane chatDisplay;  // Lista de chats
-    @FXML private Label lblChatName;      // Indica el nombre del usuario del chat
+    @FXML
+    private VBox chatPane;          // Contiene StackPane chatDisplay y la zona donde introducir el mensaje
+    @FXML
+    private StackPane chatDisplay;  // Lista de chats
+    @FXML
+    private Label lblChatName;      // Indica el nombre del usuario del chat
     private ChatView openedChat;          // Chat actualmente activo (debe estar por delante siempre)
 
     @FXML
@@ -56,7 +70,7 @@ public class MainWindowController {
         // Añadir un listener de seleccion para abrir el chat correspondiente
         // (Esto no se puede hacer mediante FXML)
         lstContacts.getSelectionModel().selectedItemProperty().addListener(
-            (observableValue, oldValue, newValue) -> openChat()
+                (observableValue, oldValue, newValue) -> openChat()
         );
 
         // Configurar el CellFactory
@@ -113,7 +127,7 @@ public class MainWindowController {
 
         // Notificar de las peticiones de amistad pendientes
         Collection<String> pendingRequests = ClientImpl.getInstance().getPendingRequests();
-        if(pendingRequests != null && !pendingRequests.isEmpty()){
+        if (pendingRequests != null && !pendingRequests.isEmpty()) {
             StringBuilder builder = new StringBuilder();
             for (String solicitud : pendingRequests) {
                 builder.append(solicitud);
@@ -256,8 +270,8 @@ public class MainWindowController {
         // Buscar el chat deseado por la interfaz
         ChatView selected = null;
         for (Node n : chatDisplay.getChildren()) {
-            if (n instanceof ChatView chatView ) {
-                if (chatView.fromUser(selectedUser)){
+            if (n instanceof ChatView chatView) {
+                if (chatView.fromUser(selectedUser)) {
                     selected = chatView;
                     break;
                 }
@@ -489,7 +503,7 @@ public class MainWindowController {
                     "Error inesperado",
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             createAlert(
                     Alert.AlertType.INFORMATION,
                     "Usuario desconocido",
@@ -503,13 +517,13 @@ public class MainWindowController {
     public void getFriends(Event ignoredEvent) {
         try {
             Collection<String> result = ClientImpl.getInstance().getFriends();
-            if(result != null) {
-                if (!result.isEmpty()){
+            if (result != null) {
+                if (!result.isEmpty()) {
                     lstFriends.getItems().clear();
                     lstFriends.getItems().addAll(ClientImpl.getInstance().getFriends());
                 }
             }
-        } catch (RemoteException e){
+        } catch (RemoteException e) {
             PtpException.logError(e);
             createAlert(
                     Alert.AlertType.ERROR,
@@ -517,18 +531,11 @@ public class MainWindowController {
                     "Error inesperado",
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
-        } catch (NotFoundException e){
-            createAlert(
-                    Alert.AlertType.INFORMATION,
-                    "Usuario desconocido",
-                    "Usuario desconocido",
-                    "No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername())
-            );
         }
     }
 
     @FXML
-    public void deleteFriendship(ActionEvent actionEvent) {
+    public void deleteFriendship(ActionEvent ignoredActionEvent) {
         String friend = lstFriends.getSelectionModel().getSelectedItem();
         if (friend == null) {
             return;
@@ -538,14 +545,14 @@ public class MainWindowController {
             ClientImpl.getInstance().deleteFriendship(friend);
             removeFriend(friend);
             removeContact(friend);
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             createAlert(
                     Alert.AlertType.INFORMATION,
                     "Usuario desconocido",
                     "Usuario desconocido",
                     "No se ha encontrado al usuario de ID \"%s\"".formatted(ClientImpl.getInstance().getUsername())
             );
-        } catch (RemoteException e){
+        } catch (RemoteException e) {
             PtpException.logError(e);
             createAlert(
                     Alert.AlertType.ERROR,
@@ -562,8 +569,8 @@ public class MainWindowController {
     public void changePassword(ActionEvent ignoredActionEvent) {
         if (
                 inputNewPassword1.getText().isEmpty()
-                || inputNewPassword2.getText().isEmpty()
-                || inputOldPassword.getText().isEmpty()
+                        || inputNewPassword2.getText().isEmpty()
+                        || inputOldPassword.getText().isEmpty()
         ) {
             lblInputFailed.setVisible(true);
             lblInputFailed.setText("Debe rellenar todos los campos");
@@ -591,7 +598,7 @@ public class MainWindowController {
                     "Contraseña actualizada correctamente",
                     ""
             );
-        } catch (AuthException e){
+        } catch (AuthException e) {
             createAlert(
                     Alert.AlertType.ERROR,
                     "Credenciales inválidas",

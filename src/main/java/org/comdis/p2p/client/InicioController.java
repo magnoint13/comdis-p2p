@@ -5,7 +5,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
@@ -13,7 +12,6 @@ import org.comdis.p2p.exceptions.AuthException;
 import org.comdis.p2p.exceptions.PtpException;
 
 import java.io.IOException;
-import java.net.URL;
 
 
 public class InicioController {

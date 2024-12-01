@@ -6,7 +6,6 @@ module org.example.compdis_p2p {
 
     requires java.rmi;
     requires org.xerial.sqlitejdbc;
-    requires java.desktop;
 
     opens org.comdis.p2p to javafx.fxml;
     exports org.comdis.p2p;

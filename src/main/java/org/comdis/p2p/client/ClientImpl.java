@@ -1,6 +1,5 @@
 package org.comdis.p2p.client;
 
-import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.comdis.p2p.ClientCallback;
 import org.comdis.p2p.ClientPtp;
@@ -95,6 +94,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     }
 
     public void connect(String username, String password) throws AuthException, AlreadyExistsException, RemoteException {
+        // Comprobacion extra por si el usuario ya esta conectado
         if (isOnline()) {
             throw new AlreadyExistsException("El usuario ya esta conectado como \"%s\"".formatted(handle.getUsername()));
         }
@@ -162,7 +162,7 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
         server.deleteFriendship(handle,to);
     }
 
-    public Collection<String> getFriends() throws NotFoundException, RemoteException{
+    public Collection<String> getFriends() throws RemoteException{
         return server.getFriends(handle);
     }
 
@@ -272,8 +272,8 @@ class ClientImpl extends UnicastRemoteObject implements ClientCallback, ClientPt
     // ==== AJUSTES ====================================================================================================
 
     @Override
-    public void changePassword(String username, String oldPassword, String oldPassword2) throws AuthException, RemoteException{
-        server.changePassword(username, oldPassword, oldPassword2);
+    public void changePassword(String username, String oldPassword, String newPassword) throws AuthException, RemoteException{
+        server.changePassword(username, oldPassword, newPassword);
     }
 
 }
