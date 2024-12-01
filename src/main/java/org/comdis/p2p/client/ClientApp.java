@@ -17,7 +17,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 /**
- * Clase principal de la GUI del cliente. Abre la ventana de inicio de sesión y gestiona el cliente
+ * Clase principal de la GUI del cliente.
+ * Abre las diferentes ventanas de la aplicacion y gestiona la creacion y destruccion del cliente.
  */
 public class ClientApp extends Application {
     private static final String TITLE = "¡Programa de comunicación P2P!";
@@ -74,7 +75,6 @@ public class ClientApp extends Application {
 
     @Override
     public void start(Stage stage) {
-
         ClientImpl client;
         try {
             // Crear el cliente la primera vez

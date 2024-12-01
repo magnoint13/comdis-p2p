@@ -1,13 +1,11 @@
 package org.comdis.p2p;
 
-import org.comdis.p2p.exceptions.AuthException;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
 /**
- * Interfaz que define las notificaciones que envia el servido a un cliente.
+ * Interfaz que define las notificaciones que envia el servidor a un cliente.
  */
 public interface ClientCallback extends Remote {
     // TODO: metodo ping que permita al servidor determinar si todavia esta online
@@ -44,8 +42,8 @@ public interface ClientCallback extends Remote {
      */
     void newFriendRequest(String username) throws RemoteException;
 
-    void changePassword(String username, String oldPassword, String newPassword) throws AuthException, RemoteException;
-
-    void friendshipFinished(RemoteClient friend) throws RemoteException;
-
+    /**
+     * Notifica a `this` que `formerFriend` ha cancelado la amistad.
+     */
+    void friendshipFinished(String formerFriend) throws RemoteException;
 }

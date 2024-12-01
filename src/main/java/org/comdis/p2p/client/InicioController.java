@@ -9,26 +9,15 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import org.comdis.p2p.exceptions.AlreadyExistsException;
 import org.comdis.p2p.exceptions.AuthException;
-import org.comdis.p2p.exceptions.PtpException;
 
 import java.io.IOException;
 
 
 public class InicioController {
 
-    @FXML
-    public ImageView imageView;
-    @FXML
-    public TextField username;
-    @FXML
-    public PasswordField password;
-    @FXML
-    public Label txtError;
-
-    @FXML
-    public void initialize() {
-        txtError.setVisible(false);
-    }
+    @FXML public TextField username;
+    @FXML public PasswordField password;
+    @FXML public Label txtError;
 
     /**
      * Inicio de sesion
@@ -65,6 +54,7 @@ public class InicioController {
             txtError.setText("Introduce usuario y contraseña");
             return;
         }
+
         try {
             ClientImpl.getInstance().createUserAndConnect(username.getText(), password.getText());
             ClientApp.launchMainWindow((Stage) username.getScene().getWindow());

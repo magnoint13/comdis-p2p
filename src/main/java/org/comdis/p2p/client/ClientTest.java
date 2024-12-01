@@ -11,6 +11,9 @@ import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
+/**
+ * Cliente basico de terminal para comprobar que la funcionalidad del servidor funciona.
+ */
 class ClientTest {
     public static void main(String[] args) throws RemoteException, MalformedURLException, NotBoundException {
         boolean running = true;
@@ -48,9 +51,7 @@ class ClientTest {
                 case 4 -> {
                     try {
                         String password = askString("Contraseña: ");
-                        String username = client.getUsername(); //Luego handle se hace null y peta por el disconnect
-                        client.disconnect();
-                        client.deleteUser(username, password);
+                        client.deleteUser(password);
                     } catch (AuthException e) {
                         System.out.println("ERROR: " + e.getMessage());
                     }

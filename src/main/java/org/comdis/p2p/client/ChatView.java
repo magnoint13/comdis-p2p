@@ -9,6 +9,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 
+/**
+ * Representa un chat con un usuario.
+ * <br><br>
+ * Se almacena el nombre de ese usuario, los mensajes y si hay mensajes nuevos.
+ */
 public class ChatView extends ScrollPane {
     private final static int MAX_MESSAGES = 100;
 

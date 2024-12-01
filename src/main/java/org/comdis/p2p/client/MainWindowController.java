@@ -10,7 +10,6 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -158,7 +157,6 @@ public class MainWindowController {
             // De esta forma, el usuario puede seguir viendo los mensajes hasta que seleccione otro chat
             // Entonces, se borraran
             lstContacts.getSelectionModel().clearSelection();
-
             lstContacts.getItems().remove(username);
 
             // Si tenia el chat abierto, correspondiente al contacto que se quita
@@ -239,7 +237,7 @@ public class MainWindowController {
     }
 
     // Metodo privado puesto que solo puede ser llamado desde el hilo principal
-    private Optional<ButtonType> creatConfirmationAlert(String title, String header, String content){
+    private Optional<ButtonType> createConfirmationAlert(String title, String header, String content){
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(title);
         alert.setHeaderText(header);
@@ -286,10 +284,8 @@ public class MainWindowController {
 
     private boolean hasUnreadMessage(String cell) {
         for (Node n : chatDisplay.getChildren()) {
-            if (n instanceof ChatView chatView) {
-                if (chatView.isUnread() && chatView.fromUser(cell)) {
-                    return true;
-                }
+            if (n instanceof ChatView chatView && chatView.isUnread() && chatView.fromUser(cell)) {
+                return true;
             }
         }
         return false;
@@ -312,11 +308,9 @@ public class MainWindowController {
         // Buscar el chat deseado por la interfaz
         ChatView selected = null;
         for (Node n : chatDisplay.getChildren()) {
-            if (n instanceof ChatView chatView) {
-                if (chatView.fromUser(selectedUser)) {
-                    selected = chatView;
-                    break;
-                }
+            if (n instanceof ChatView chatView && chatView.fromUser(selectedUser)) {
+                selected = chatView;
+                break;
             }
         }
 
@@ -397,7 +391,6 @@ public class MainWindowController {
             ClientImpl.getInstance().sendMessage(receiver, msg);
 
             // Mostrar en la GUI que el mensaje enviado
-            System.out.println("Enviar mensaje a " + receiver + ": " + msg);
             openedChat.addSentMsg(msg);
 
         } catch (NotFoundException e) {
@@ -449,6 +442,10 @@ public class MainWindowController {
     @FXML
     public void sendFriendRequest(ActionEvent ignoredActionEvent) {
         String other = lstSearchResult.getSelectionModel().getSelectedItem();
+        if (other == null) {
+            return;
+        }
+
         try {
             ClientImpl.getInstance().sendFriendRequest(other);
             createAlert(
@@ -492,7 +489,6 @@ public class MainWindowController {
     private void acceptFriendRequest(String newFriend) {
         try {
             ClientImpl.getInstance().acceptFriendRequest(newFriend);
-            System.out.println("Has aceptado la solicitud de " + newFriend);
             pendingRequests.getItems().remove(newFriend);
         } catch (AlreadyExistsException e) {
             createAlert(
@@ -521,21 +517,29 @@ public class MainWindowController {
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
         }
-
     }
 
     @FXML
     public void acceptFriendRequest(ActionEvent ignoredActionEvent) {
         String newFriend = pendingRequests.getSelectionModel().getSelectedItem();
+
+        if (newFriend == null) {
+            return;
+        }
+
         acceptFriendRequest(newFriend);
     }
 
     @FXML
     public void rejectFriendRequest(ActionEvent ignoredEvent) {
         String rejected = pendingRequests.getSelectionModel().getSelectedItem();
+
+        if (rejected == null) {
+            return;
+        }
+
         try {
             ClientImpl.getInstance().cancelFriendRequest(rejected);
-            System.out.println("Has rechazado la solicitud de " + rejected);
             pendingRequests.getItems().remove(rejected);
         } catch (RemoteException e) {
             PtpException.logError(e);
@@ -619,26 +623,80 @@ public class MainWindowController {
             return;
         }
 
-        lblInputFailed.setVisible(false);
-
         if (!inputNewPassword1.getText().equals(inputNewPassword2.getText())) {
             lblInputFailed.setText("Las contraseñas introducidas no coinciden");
             lblInputFailed.setVisible(true);
             return;
         }
 
+        lblInputFailed.setVisible(false);
+
         try {
+            // Realizar la peticion al servidor
             ClientImpl.getInstance().changePassword(
-                    ClientImpl.getInstance().getUsername(),
                     inputOldPassword.getText(),
                     inputNewPassword1.getText()
             );
 
+            // Notificar que la operacion fue correcta
             createAlert(
                     Alert.AlertType.INFORMATION,
                     "Operación exitosa",
                     "Contraseña actualizada correctamente",
                     ""
+            );
+
+            // Limpiar los campos de texto
+            inputOldPassword.setText("");
+            inputNewPassword1.setText("");
+            inputNewPassword2.setText("");
+
+        } catch (AuthException e) {
+            lblInputFailed.setText("La contraseña es invalida");
+            lblInputFailed.setVisible(true);
+        } catch (RemoteException e) {
+            PtpException.logError(e);
+            createAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Error inesperado",
+                    "Mensaje de error: %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    @FXML
+    public void deleteUser(ActionEvent ignoredActionEvent) {
+        lblInputFailed.setVisible(false);
+        if (inputOldPassword.getText().isEmpty()) {
+            lblInputFailed.setVisible(true);
+            lblInputFailed.setText("Introduzca su contraseña para poder borrar la cuenta");
+            return;
+        }
+
+        // Mostrar el cuadro de diálogo y esperar la respuesta del usuario
+        Optional<ButtonType> result = createConfirmationAlert(
+                "Borrar usuario",
+                "¿Está seguro de que desea borrar su cuenta?",
+                "Responda, por favor."
+        );
+
+        // Procesar la respuesta del usuario
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            ClientImpl.getInstance().deleteUser(inputOldPassword.getText());
+
+            // Abrir la ventana de inicio
+            ClientApp.launchInicio((Stage) lblUsername.getScene().getWindow());
+
+            createAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Operación exitosa",
+                    "Usuario eliminado correctamente",
+                    "Lamentamos que haya decidido cerrar su cuenta. Le esperamos de vuelta :)"
             );
         } catch (AuthException e) {
             createAlert(
@@ -655,68 +713,19 @@ public class MainWindowController {
                     "Error inesperado",
                     "Mensaje de error: %s".formatted(e.getMessage())
             );
+        } catch (IOException e) {
+            PtpException.logError(e);
         }
     }
 
     @FXML
-    public void deleteUser(ActionEvent actionEvent) {
-        lblInputFailed.setVisible(false);
-        if(inputOldPassword.getText().isEmpty()) {
-            lblInputFailed.setVisible(true);
-            lblInputFailed.setText("Introduzca su contraseña para poder borrar la cuenta");
-        }else{
-            // Mostrar el cuadro de diálogo y esperar la respuesta del usuario
-            Optional<ButtonType> result = creatConfirmationAlert(
-                    "Borrar usuario",
-                    "¿Está seguro de que desea borrar su cuenta?",
-                    "Responda por favor"
-            );
-            // Procesar la respuesta del usuario
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                System.out.println("Usuario seleccionó Sí.");
-                try {
-                    ClientImpl.getInstance().deleteUser(ClientImpl.getInstance().getUsername(),inputOldPassword.getText());
-                    createAlert(
-                            Alert.AlertType.INFORMATION,
-                            "Operación exitosa",
-                            "Usuario eliminado correctamente",
-                            "Lamentamos que haya decidido cerrar su cuenta. Le esperamos de vuelta :)"
-                    );
-                    // Abrir la ventana de inicio
-                    ClientApp.launchInicio((Stage) lblUsername.getScene().getWindow());
-                } catch (AuthException e) {
-                    createAlert(
-                            Alert.AlertType.ERROR,
-                            "Credenciales inválidas",
-                            e.getMessage(),
-                            "Revise por favor si la contraseña es correcta"
-                    );
-                } catch (RemoteException e) {
-                    PtpException.logError(e);
-                    createAlert(
-                            Alert.AlertType.ERROR,
-                            "Error",
-                            "Error inesperado",
-                            "Mensaje de error: %s".formatted(e.getMessage())
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            } else {
-                System.out.println("Usuario seleccionó No o cerró la alerta.");
-            }
-        }
-    }
-
-    @FXML
-    public void logOut(ActionEvent actionEvent) {
-        // Abrir la ventana de inicio
+    public void logOut(ActionEvent ignoredActionEvent) {
         try {
+            // Abrir la ventana de inicio
             ClientImpl.getInstance().disconnect();
             ClientApp.launchInicio((Stage) lblUsername.getScene().getWindow());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 }

@@ -8,7 +8,6 @@
     <!-- Panel de la izquierda -->
     <StackPane fx:id="leftPane">
         <Label fx:id="txtAppName" text="Cliente P2P"/>
-        <ImageView fx:id="imageView"/>
     </StackPane>
 
     <!-- Panel de la derecha -->
@@ -22,7 +21,7 @@
             <PasswordField fx:id="password" GridPane.rowIndex="2" GridPane.columnIndex="2" onAction="#logIn"/>
         </GridPane>
 
-        <Label fx:id="txtError"/>
+        <Label fx:id="txtError" visible="false"/>
 
         <GridPane fx:id="btnPane">
             <Button fx:id="btnLogIn" GridPane.columnIndex="1" onAction="#logIn" text="Iniciar sesion" mnemonicParsing="false"/>

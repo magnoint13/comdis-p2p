@@ -14,6 +14,12 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 
+/**
+ * Gestiona todas las operaciones que se realizan en la Base de Datos
+ * <br><br>
+ * Se utiliza una sencilla Base de Datos de SQLite3 con 3 tablas, `Usuarios`,
+ * `Amigos` y `Solicitudes`. Consultar `bd_creation.sql` para más detalles.
+ */
 class DataBaseController implements AutoCloseable {
     private static final int TABLE_COUNT = 3;
 

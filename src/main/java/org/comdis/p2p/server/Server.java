@@ -19,14 +19,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Clase Servidor
+ * <br><br>
+ * Implementa la interfaz remota `ServerInterface`.
  */
-public class Server extends UnicastRemoteObject implements ServerInterface {
+class Server extends UnicastRemoteObject implements ServerInterface {
 
     // El servidor manejará cada peticion en un hilo diferente (Java RMI),
     // por lo que el estado compartido (este HashMap) debe ser Thread-Safe.
     //
     // Según la documentacion, no se permiten claves `null`, lo que permite
-    // usar `get` y ver si el resultado es `null` para ver si hubo exito.
+    // usar `get` y ver si el resultado es `null` para ver dicho elemento
+    // existe en la estructura de datos.
     private final ConcurrentHashMap<String, Client> connectedClients;
 
     private final DataBaseController database;
@@ -95,7 +98,7 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
         // Si no estaba conectado, no hacer nada
         if (client == null) {
-            System.out.println("No se encuentra conectado al servidor");
+            System.out.printf("El usuario %s no estaba conectado, no se puede desconectar\n", remoteClient.getUsername());
             return;
         }
 
@@ -133,17 +136,23 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     @Override
     public void createUser(String username, String password) throws RemoteException, AlreadyExistsException {
         database.addUser(username, password);
+        System.out.println("Inscripcion de nuevo cliente: " + username);
     }
 
     @Override
-    public void deleteUser(String username, String password) throws RemoteException, AuthException {
-        database.deleteUser(username, password);
+    public void deleteUser(RemoteClient client, String password) throws RemoteException, AuthException {
+        database.deleteUser(client.getUsername(), password);
+        System.out.println("Borrar cliente: " + client.getUsername());
+        // Importante desconectarlo despues de haberlo borrado,
+        // porque sino el sera desconectado sin haberlo borrado.
+        disconnect(client);
     }
 
     // ==== BUSCAR USUARIOS ============================================================================================
 
     @Override
     public Collection<String> searchUsernames(RemoteClient searcher, String username) throws RemoteException {
+        System.out.printf("El cliente %s busca usuarios de query \"%s\"\n", searcher.getUsername(), username);
         return database.searchUsernames(username, searcher.getUsername());
     }
 
@@ -153,22 +162,24 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     public void sendFriendRequest(RemoteClient from, String to) throws NotFoundException, AlreadyExistsException, RemoteException, PetitionFromOtherExistsException {
         // Almacenar la peticion en la BD para que constancia de ello
         if (database.pendingFromOtherExists(to, from.getUsername())) {
+            System.out.printf("Aviso de peticiones de amistad cruzadas entre \"%s\" y \"%s\"\n", from.getUsername(), to);
             throw new PetitionFromOtherExistsException("Ya existe una solictud pendiente del usuario " + to + ", por ende se acepta esa solicitud automáticamente");
-        } else {
-            database.sendFriendRequest(from.getUsername(), to);
-
-            // Si el receptor esta online, ya se le notifica
-            Client receiver = connectedClients.get(to);
-            if (receiver != null) {
-                receiver.newFriendRequest(from.getUsername());
-            }
         }
 
+        database.sendFriendRequest(from.getUsername(), to);
+        System.out.printf("Peticion de amistad de \"%s\" a \"%s\"\n", from.getUsername(), to);
+
+        // Si el receptor esta online, ya se le notifica
+        Client receiver = connectedClients.get(to);
+        if (receiver != null) {
+            receiver.newFriendRequest(from.getUsername());
+        }
     }
 
     @Override
     public void acceptFriendRequest(RemoteClient accepts, String originalSender) throws NotFoundException, RemoteException, AlreadyExistsException {
         database.acceptFriendRequest(accepts.getUsername(), originalSender);
+        System.out.printf("Cliente \"%s\" acepta la peticion de amistad de \"%s\"\n", accepts.getUsername(), originalSender);
 
         // Si los usuarios están conectados, entonces se les notifica que están online
         // De esta forma, podran empezar a mandarse mensajes
@@ -184,26 +195,30 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     @Override
     public void cancelFriendRequest(RemoteClient cancels, String other) throws NotFoundException, RemoteException {
         database.cancelFriendRequest(cancels.getUsername(), other);
+        System.out.printf("Cliente \"%s\" cancela la peticion de amistad de \"%s\"\n", cancels.getUsername(), other);
     }
 
     @Override
     public void deleteFriendship(RemoteClient client, String other) throws NotFoundException, RemoteException {
         database.deleteFriendship(client, other);
+        System.out.printf("Cliente \"%s\" borra su amistad con \"%s\"\n", client.getUsername(), other);
 
-        Client friend = connectedClients.get(other);
-
-        if (friend != null) {
-            friend.friendshipFinished(client);
+        Client formerFriend = connectedClients.get(other);
+        if (formerFriend != null) {
+            formerFriend.friendshipFinished(client.getUsername());
         }
     }
 
+    // ==== OTROS ======================================================================================================
+
     @Override
-    public void changePassword(String username, String oldpassword, String newpassword) throws AuthException, RemoteException {
-        database.changePassword(username, oldpassword, newpassword);
+    public void changePassword(RemoteClient client, String oldPassword, String newPassword) throws AuthException, RemoteException {
+        database.changePassword(client.getUsername(), oldPassword, newPassword);
+        System.out.println("Cambia su contraseña: " + client.getUsername());
     }
 
     @Override
-    public Collection<String> getFriends(RemoteClient handle) throws RemoteException {
-        return database.getFriends(handle.getUsername());
+    public Collection<String> getFriends(RemoteClient client) throws RemoteException {
+        return database.getFriends(client.getUsername());
     }
 }

@@ -9,6 +9,14 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
+/**
+ * Peticiones disponibles que se le pueden realizar al servidor.
+ * <br><br>
+ * Excepto `createUser` y `connect`, el resto requieren de una instancia de `RemoteClient`.
+ * Esto significa que el cliente que realiza la peticion debe estar conectado para llevarla
+ * a cabo. Notese que para ello, la solo funcion `connect` devuelve esa instancia; y para que
+ * esta sea exitosa, es necesario realizar `createUser` primero.
+ */
 public interface ServerInterface extends Remote {
 
     // ==== CREAR/BORRAR USUARIOS ======================================================================================
@@ -25,7 +33,7 @@ public interface ServerInterface extends Remote {
      *
      * @throws AuthException Si el usuario o la contraseña no son válidos.
      */
-    void deleteUser(String username, String password)
+    void deleteUser(RemoteClient client, String password)
             throws AuthException, RemoteException;
 
     // ==== CONECTARSE/DESCONECTARSE ===================================================================================
@@ -95,14 +103,16 @@ public interface ServerInterface extends Remote {
      */
     Collection<String> searchUsernames(RemoteClient searcher, String username) throws RemoteException;
 
+    // ==== OTROS ======================================================================================================
+
     // TODO: posibilidad para verificar la identidad de un usuario:
     //       El server comprueba si esta online y si contraseña es correcta
     //       Supuestamente, equals de dos objetos remotos tambien funcionaria
 
-    void changePassword(String username, String oldpassword, String newpassword) throws AuthException, RemoteException;
+    void changePassword(RemoteClient client, String oldPassword, String newPassword) throws AuthException, RemoteException;
 
     /**
      * Obtiene una lista con los nombres de los amigos de un usuario
      */
-    Collection<String> getFriends(RemoteClient handle) throws RemoteException;
+    Collection<String> getFriends(RemoteClient client) throws RemoteException;
 }

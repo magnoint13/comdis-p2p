@@ -7,6 +7,9 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+/**
+ * Inicia el servidor, pasandole donde está la Base de Datos y creando el registro de Java RMI
+ */
 public class MainServer {
     private static final int REGISTRY_PORT = 1099;
     public static final String REGISTRY_URL = "rmi://localhost:" + REGISTRY_PORT + "/server";

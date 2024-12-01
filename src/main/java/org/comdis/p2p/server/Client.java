@@ -63,8 +63,8 @@ class Client implements ClientCallback {
     }
 
     @Override
-    public void friendshipFinished(RemoteClient friend) throws RemoteException {
-        callbacks.friendshipFinished(friend);
+    public void friendshipFinished(String formerFriend) throws RemoteException {
+        callbacks.friendshipFinished(formerFriend);
     }
 
     @Override
@@ -75,11 +75,6 @@ class Client implements ClientCallback {
     @Override
     public void newFriendRequest(String username) throws RemoteException {
         callbacks.newFriendRequest(username);
-    }
-
-    @Override
-    public void changePassword(String username, String oldPassword, String newPassword) throws AuthException, RemoteException {
-        callbacks.changePassword(username, oldPassword, newPassword);
     }
 
     // ==== COMODIDADES ================================================================================================
