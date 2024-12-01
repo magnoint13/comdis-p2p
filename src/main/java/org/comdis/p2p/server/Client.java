@@ -78,8 +78,8 @@ class Client implements ClientCallback {
     }
 
     @Override
-    public void changePassword(String username, String oldpassword, String newpasword) throws AuthException , RemoteException{
-        callbacks.changePassword(username, oldpassword, newpasword);
+    public void changePassword(String username, String oldPassword, String newPassword) throws AuthException, RemoteException {
+        callbacks.changePassword(username, oldPassword, newPassword);
     }
 
     // ==== COMODIDADES ================================================================================================
