@@ -21,7 +21,7 @@ import java.rmi.RemoteException;
  * Clase principal de la GUI del cliente. Abre la ventana de inicio de sesión y gestiona el cliente
  */
 public class ClientApp extends Application {
-    private static final String TITLE = "Programa de comunicación P2P!";
+    private static final String TITLE = "!Programa de comunicación P2P!";
     private static final int INIT_WINDOW_WIDTH = 650;
     private static final int INIT_WINDOW_HEIGHT = 400;
 
