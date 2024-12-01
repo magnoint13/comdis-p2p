@@ -156,7 +156,6 @@ public class MainWindowController {
             // De esta forma, el usuario puede seguir viendo los mensajes hasta que seleccione otro chat
             // Entonces, se borraran
             lstContacts.getSelectionModel().clearSelection();
-            System.out.println(lstContacts.getSelectionModel().getSelectedItem());
 
             lstContacts.getItems().remove(username);
 
@@ -258,7 +257,6 @@ public class MainWindowController {
             return;
         }
 
-        System.out.println("Has seleccionado el chat con " + selectedUser);
         lblChatName.setText(selectedUser);
 
         // Buscar el chat deseado por la interfaz
@@ -349,7 +347,7 @@ public class MainWindowController {
             ClientImpl.getInstance().sendMessage(receiver, msg);
 
             // Mostrar en la GUI que el mensaje enviado
-            System.out.println("Enviar mensaje a " + receiver);
+            System.out.println("Enviar mensaje a " + receiver + ": " + msg);
             openedChat.addSentMsg(msg);
 
         } catch (NotFoundException e) {
