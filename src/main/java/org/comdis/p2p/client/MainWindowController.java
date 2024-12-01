@@ -24,42 +24,28 @@ import java.util.Collection;
 
 public class MainWindowController {
     // Listas de elementos
-    @FXML
-    private ListView<String> pendingRequests;  // Peticiones de amistad
-    @FXML
-    private ListView<String> lstSearchResult;  // Resultados de búsqueda de usuarios
-    @FXML
-    private ListView<String> lstContacts;      // Amigos online
-    @FXML
-    private ListView<String> lstFriends;       // Lista de amigos
+    @FXML private ListView<String> pendingRequests;  // Peticiones de amistad
+    @FXML private ListView<String> lstSearchResult;  // Resultados de búsqueda de usuarios
+    @FXML private ListView<String> lstContacts;      // Amigos online
+    @FXML private ListView<String> lstFriends;       // Lista de amigos
 
     // Text input
-    @FXML
-    private TextField inputMsg;
-    @FXML
-    private TextField inputSearchUsers;
-    @FXML
-    private PasswordField inputNewPassword2;
-    @FXML
-    private PasswordField inputNewPassword1;
-    @FXML
-    private PasswordField inputOldPassword;
+    @FXML private TextField inputMsg;
+    @FXML private TextField inputSearchUsers;
+    @FXML private PasswordField inputNewPassword2;
+    @FXML private PasswordField inputNewPassword1;
+    @FXML private PasswordField inputOldPassword;
 
     // Mensaje de error (pestaña de ajustes)
-    @FXML
-    private Label lblInputFailed;
+    @FXML private Label lblInputFailed;
 
     // Muestra el nombre del usuario conectado
-    @FXML
-    private Label lblUsername;
+    @FXML private Label lblUsername;
 
     // Elementos del chat
-    @FXML
-    private VBox chatPane;          // Contiene StackPane chatDisplay y la zona donde introducir el mensaje
-    @FXML
-    private StackPane chatDisplay;  // Lista de chats
-    @FXML
-    private Label lblChatName;      // Indica el nombre del usuario del chat
+    @FXML private VBox chatPane;          // Contiene StackPane chatDisplay y la zona donde introducir el mensaje
+    @FXML private StackPane chatDisplay;  // Lista de chats
+    @FXML private Label lblChatName;      // Indica el nombre del usuario del chat
     private ChatView openedChat;          // Chat actualmente activo (debe estar por delante siempre)
 
     @FXML
@@ -73,30 +59,38 @@ public class MainWindowController {
                 (observableValue, oldValue, newValue) -> openChat()
         );
 
-        // Configurar el CellFactory
-        lstContacts.setCellFactory(lv -> new TextFieldListCell<>() {
+        // Configurar el CellFactory para poner los colores de forma apropiada
+        lstContacts.setCellFactory(lv -> new ListCell<>() {
             @Override
             public void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
 
+                // Actualizar solo si no es vacio
                 if (empty || item == null) {
                     setText(null);
                     setStyle("");
-                } else {
-                    setText(item);
-                    // Cambiar el estilo para un elemento específico
-                    if (hasUnreadMessage(item)) {
-                        setStyle("-fx-background-color: darkgreen; -fx-text-fill: white;"); // Color especial, mensajes no leídos
-                    } else {
-                        if(openedChat != null) {
-                            if (openedChat.fromUser(item)){ // Si es el chat abierto
-                                setStyle("-fx-background-color: red; -fx-text-fill: white;"); // Rojo
-                            }else{  // Si no
-                                setStyle("-fx-background-color: limegreen; -fx-text-fill: white;"); // Estilo default
-                            }
-                        }
-                    }
+                    return;
                 }
+
+                // Poner el texto correspondiente
+                setText(item);
+                setStyle("-fx-cursor:hand;");
+
+                // Si el mensaje no está leido, se pone un color especial
+                if (hasUnreadMessage(item)) {
+                    setStyle(getStyle() + "-fx-background-color:darkgreen;");
+                    return;
+                }
+
+                // Si el chat es el abierto actualmente, queda en rojo
+                if (openedChat != null && openedChat.fromUser(item)) {
+                    setStyle(getStyle() + "-fx-background-color:red;");
+                    return;
+                }
+
+                // En caso contrario, se ponen dos variantes de verde que se alternan
+                String color = (getIndex() % 2 == 0) ? "#32cd32" : "#35b735";
+                setStyle(getStyle() + "-fx-background-color:%s;".formatted(color));
             }
         });
 
@@ -241,9 +235,9 @@ public class MainWindowController {
         });
     }
 
-    private boolean hasUnreadMessage(String cell){
+    private boolean hasUnreadMessage(String cell) {
         for (Node n : chatDisplay.getChildren()) {
-            if (n instanceof ChatView chatView ) {
+            if (n instanceof ChatView chatView) {
                 if (chatView.isUnread() && chatView.fromUser(cell)) {
                     return true;
                 }

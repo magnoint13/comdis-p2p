@@ -58,6 +58,15 @@
 
 /* ==== CHAT ======================================= */
 
+.split-pane .split-pane-divider {
+    -fx-border-width: 0;
+    -fx-background-color: black;
+
+    -fx-min-width: 2px;
+    -fx-max-width: 2px;
+    -fx-pref-width: 2px;
+}
+
 #splitSize {
     -fx-min-width: 100px;
     -fx-max-width: 300px;
@@ -71,7 +80,7 @@
 }
 
 #lstContacts .list-cell {
-    -fx-background-color: #32cd32;
+    -fx-background-color: white;
 
     -fx-font: bold 14 system;
     -fx-text-fill: white;
@@ -79,18 +88,16 @@
     -fx-pref-height: 50px;
     -fx-min-height: 50px;
     -fx-max-height: 50px;
-}
 
-#lstContacts .list-cell:odd {
-    -fx-background-color: #35b735;
+    /*
+     * El resto de colores se ponen mediante codigo
+     * en MainWindowController.initialize()
+     */
 }
 
 #lstContacts .list-cell:hover {
-    -fx-background-color: grey;
-}
-
-#lstContacts .list-cell:selected {
-    -fx-background-color: red;
+    -fx-border-width: 3px;
+    -fx-border-color: black;
 }
 
 #chatPane {
@@ -123,8 +130,8 @@
 .toolbar {
     -fx-alignment: center;
     -fx-background-color: white;
-    -fx-spacing: 5px;
-    -fx-spacing: 10px;
+    -fx-spacing: 7px;
+    -fx-padding: 10px;
 }
 
 /* Input de texto */
@@ -158,6 +165,7 @@
 /* Textos y etiquetas */
 .title {
     -fx-font: bold 20 system;
+    -fx-padding: 0 0 15px 0;
 }
 
 .error {

@@ -50,9 +50,8 @@ public class InicioController {
             txtError.setText("Usuario o contraseña incorrectos");
 
         } catch (AlreadyExistsException e) {
-            // Es imposible que ya esté conectado, si se acaba de iniciar
-            // Se muestra por la consola en caso de que haya algo mal
-            PtpException.logError(e);
+            txtError.setVisible(true);
+            txtError.setText("Ese usuario ya esta conectado");
         }
     }
 
